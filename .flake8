@@ -1,0 +1,7 @@
+; https://flake8.pycqa.org/en/latest/user/configuration.html#
+[flake8]
+; extend-ignore = E111
+exclude = .git,__pycache__,docs/source/conf.py,old,build,dist
+max-complexity = 10
+max-line-length = 80
+indent-size = 4
