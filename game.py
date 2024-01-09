@@ -2,18 +2,29 @@ import sys
 
 import pygame
 
-pygame.init()
 
-pygame.display.set_caption('python')
-screen = pygame.display.set_mode((640, 480))
+class Game:
+    def __init__(self):
+        pygame.init()
 
-clock = pygame.time.Clock()
+        pygame.display.set_caption('python')
+        self.screen = pygame.display.set_mode((640, 480))
 
-while True:
-      for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                  pygame.quit()
-                  sys.exit()
+        self.clock = pygame.time.Clock()
 
-      pygame.display.update()
-      clock.tick(60)
+        self.img = pygame.image.load('data/images/clouds/cloud_1.png')
+
+    def run(self):
+        while True:
+            self.screen.blit(self.img, (100, 200))
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+            pygame.display.update()
+            self.clock.tick(60)
+
+
+Game().run()
