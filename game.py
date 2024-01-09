@@ -13,15 +13,38 @@ class Game:
         self.clock = pygame.time.Clock()
 
         self.img = pygame.image.load('data/images/clouds/cloud_1.png')
+        # The black background will be rendered as transparent,
+        # i.e. one specfic color should be rendered transparent.
+        self.img.set_colorkey((0, 0, 0))
+
+        self.img_pos = [160, 260]
+        self.movement = [False, False]
 
     def run(self):
         while True:
-            self.screen.blit(self.img, (100, 200))
+            # Clear screen
+            self.screen.fill((14, 219, 248))
+
+            self.img_pos[1] += (self.movement[1] - self.movement[0]) * 5
+            self.screen.blit(self.img, self.img_pos)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+                # Keys should be arrow keys instead and preferably x and z for
+                # other actions. This is more universal for different keyboard
+                # layouts, but for my sake I'll use WASD. I could add both...
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_w:
+                        self.movement[0] = True
+                    if event.key == pygame.K_s:
+                        self.movement[1] = True
+                if event.type == pygame.KEYUP:
+                    if event.key == pygame.K_w:
+                        self.movement[0] = False
+                    if event.key == pygame.K_s:
+                        self.movement[1] = False
 
             pygame.display.update()
             self.clock.tick(60)
