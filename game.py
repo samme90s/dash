@@ -20,7 +20,8 @@ class Game:
         self.movement = [False, False]
 
         self.assets = {
-            'player': load_image('entities/player.png')
+            'player': load_image('entities/player.png'),
+            'background': load_image('background.png')
         }
         directories = ['decor',
                        'grass',
@@ -50,7 +51,7 @@ class Game:
             self.clock.tick(60)
 
     def clear(self):
-        self.display.fill((14, 219, 248))
+        self.display.blit(self.assets['background'], (0, 0))
 
     def handle_scroll(self):
         self.scroll[0] += (self.player.rect().centerx -
