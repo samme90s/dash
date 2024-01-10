@@ -1,7 +1,7 @@
 import pygame
 
-from scripts.vector2 import Vector2
 from scripts.tile import Tile
+from scripts.vector2 import Vector2
 
 NEIGHBOR_OFFSETS = [(-1, 0),
                     (-1, -1),
@@ -36,15 +36,14 @@ class Tilemap:
         # render them first so that they are applied behind the grid.
         for tile in self.offgrid_tiles:
             surf.blit(self.game.assets[tile.type][tile.variant],
-                      tile.pos.offset_inverse(offset))
+                      tile.pos.sub(offset))
 
         for loc in self.tilemap:
             tile = self.tilemap[loc]
             # The second [] can be performed because the type is a list.
-            surf.blit(self.game.assets[tile.type][tile.variant], tile.pos
-                      .offset_inverse(offset)
-                      .multiply(self.tile_size)
-                      .tuple())
+            # Multiply has to be done first for the subtraction to work.
+            surf.blit(self.game.assets[tile.type][tile.variant],
+                      tile.pos.multiply(self.tile_size).sub(offset).tuple())
 
     def physics_rects_around(self, pos):
         rects = []

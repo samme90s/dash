@@ -7,7 +7,6 @@ class PhysicsEntity:
     def __init__(self, game, e_type, pos, size):
         self.game = game
         self.type = e_type
-        self.pos = pos
         # Possibly use pygame.Vector2 instead or pygame.FRect?
         self.pos = Vector2(pos)
         self.size = size
@@ -70,4 +69,4 @@ class PhysicsEntity:
 
     def render(self, surf, offset=(0, 0)):
         surf.blit(self.game.assets['player'],
-                  self.pos.offset_inverse(offset).tuple())
+                  self.pos.sub(offset).tuple())

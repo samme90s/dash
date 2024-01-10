@@ -5,8 +5,7 @@ class Vector2:
     def multiply(self, scalar):
         return Vector2((self.x * scalar, self.y * scalar))
 
-    # Update the method name to "subtract"?
-    def offset_inverse(self, offset):
+    def sub(self, offset):
         return Vector2((self.x - offset[0], self.y - offset[1]))
 
     def tuple(self):
