@@ -9,7 +9,6 @@ class PhysicsEntity:
         self.type = e_type
         self.pos = pos
         # Possibly use pygame.Vector2 instead or pygame.FRect?
-        # self.pos = list(pos)
         self.pos = Vector2(pos)
         self.size = size
         self.velocity = [0, 0]
