@@ -33,6 +33,8 @@ class Game:
 
         self.tilemap = Tilemap(self, tile_size=16)
 
+        self.scroll = [0, 0]
+
     def run(self):
         while True:
             self.clear()
@@ -49,12 +51,12 @@ class Game:
         self.display.fill((14, 219, 248))
 
     def handle_tilemap(self):
-        self.tilemap.render(self.display)
+        self.tilemap.render(self.display, offset=self.scroll)
 
     def handle_player(self):
         self.player.update(self.tilemap,
                            (self.movement[1] - self.movement[0], 0))
-        self.player.render(self.display)
+        self.player.render(self.display, offset=self.scroll)
 
     def handle_events(self):
         for event in pygame.event.get():
