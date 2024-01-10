@@ -29,9 +29,5 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Lint with flake8
         run: |
-          # First run: Check for Python syntax errors, undefined names, and specific issues.
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-
-          # Second run: General linting with custom configuration
-          # --exit-zero: Treat all errors as warnings, allowing the build to proceed
-          flake8 . --count --exit-zero --config=.flake8 --statistics
+          # General linting with custom configuration.
+          flake8 . --count --config=.flake8 --show-source --statistics
