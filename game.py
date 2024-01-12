@@ -5,6 +5,7 @@ import pygame
 from scripts.entities import PhysicsEntity
 from scripts.tilemap import Tilemap
 from scripts.utils import load_image, load_images
+from scripts.clouds import Clouds
 
 
 class Game:
@@ -20,15 +21,16 @@ class Game:
         self.movement = [False, False]
 
         self.assets = {
+            'background': load_image('background.png'),
+            'clouds': load_images('clouds'),
+            'decor': load_images('tiles/decor'),
+            'grass': load_images('tiles/grass'),
+            'large_decor': load_images('tiles/large_decor'),
             'player': load_image('entities/player.png'),
-            'background': load_image('background.png')
+            'stone': load_images('tiles/stone'),
         }
-        directories = ['decor',
-                       'grass',
-                       'large_decor',
-                       'stone']
-        for directory in directories:
-            self.assets[directory] = load_images('tiles/' + directory)
+
+        self.clouds = Clouds(self.assets['clouds'], count=16)
 
         self.player = PhysicsEntity(self, 'player', (50, 50), (8, 15))
 
@@ -39,8 +41,10 @@ class Game:
 
     def run(self):
         while True:
+            # Order is important here!
             self.clear()
             self.handle_scroll()
+            self.handle_clouds()
             self.handle_tilemap()
             self.handle_player()
             self.handle_events()
@@ -61,6 +65,10 @@ class Game:
                            self.display.get_height() / 2 -
                            self.scroll[1]) / 30
         self.render_scroll = (int(self.scroll[0]), int(self.scroll[1]))
+
+    def handle_clouds(self):
+        self.clouds.update()
+        self.clouds.render(self.display, offset=self.render_scroll)
 
     def handle_tilemap(self):
         self.tilemap.render(self.display, offset=self.render_scroll)
