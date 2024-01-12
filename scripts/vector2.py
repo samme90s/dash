@@ -12,6 +12,9 @@ class Vector2:
     def sub(self, offset):
         return Vector2((self.x - offset[0], self.y - offset[1]))
 
+    def add(self, offset):
+        return Vector2((self.x + offset[0], self.y + offset[1]))
+
     def mod(self, offset):
         return Vector2((self.x % offset[0], self.y % offset[1]))
 
