@@ -14,15 +14,23 @@ class Cloud:
         self.pos.x += self.speed
 
     def render(self, surf, offset=(0, 0)):
+        # Multiplying depth with offset will give a parallax effect.
         render_pos = self.pos.sub((offset[0] * self.depth,
                                    offset[1] * self.depth))
+
         surf.blit(self.img,
-                  (render_pos.x %
-                   (surf.get_width() + self.img.get_width()) -
-                   self.img.get_width(),
-                   render_pos.y %
-                   (surf.get_height() + self.img.get_height()) -
-                   self.img.get_height()))
+                  render_pos
+                  # Clouds are never removed, thus we utilize a trick looping
+                  # them. When looping thing in computer graphics you generally
+                  # use modulo.
+                  # We add the image's dimensions to make sure the cloud is not
+                  # removed before it is off-screen.
+                  .mod((surf.get_width() + self.img.get_width(),
+                        surf.get_height() + self.img.get_height()))
+                  # We subtract the image's dimensions to make sure the clouds
+                  # are added off-screen.
+                  .sub((self.img.get_width(), self.img.get_height()))
+                  .tuple())
 
 
 class Clouds:
@@ -31,11 +39,12 @@ class Clouds:
 
         for _ in range(count):
             self.clouds.append(Cloud(
-                Vector2((random.random() * 99_999, random.random() * 99_999)),
+                Vector2((random.random() * 1024, random.random() * 1024)),
                 random.choice(cloud_images),
                 random.random() * 0.05 + 0.05,
                 random.random() * 0.6 + 0.2))
 
+        # This ensures that clouds are rendered in correct order.
         self.clouds.sort(key=lambda cloud: cloud.depth)
 
     def update(self):
