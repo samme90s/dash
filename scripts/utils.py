@@ -22,3 +22,29 @@ def load_images(path):
     for img_name in sorted(os.listdir(BASE_IMG_PATH + path)):
         images.append(load_image(path + '/' + img_name))
     return images
+
+
+class Animation:
+    def __init__(self, images, img_dur=5, loop=True):
+        self.images = images
+        self.img_duration = img_dur
+        self.loop = loop
+        self.done = False
+        self.frame = 0
+        self.frame_max = img_dur * len(images) - 1
+
+    def copy(self):
+        return Animation(self.images, self.img_duration, self.loop)
+
+    def update(self):
+        if self.loop:
+            # Loops the frame using modulo.
+            self.frame = ((self.frame + 1) % self.frame_max)
+        else:
+            # Minus one to fix indexing errors.
+            self.frame = min(self.frame + 1, self.frame_max)
+            if self.frame >= self.frame_max:
+                self.done = True
+
+    def img(self):
+        return self.images[int(self.frame / self.img_duration)]
