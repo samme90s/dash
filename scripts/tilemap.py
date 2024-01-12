@@ -36,14 +36,28 @@ class Tilemap:
         # render them first so that they are applied behind the grid.
         for tile in self.offgrid_tiles:
             surf.blit(self.game.assets[tile.type][tile.variant],
-                      tile.pos.sub(offset))
+                      tile.pos
+                      .sub(offset)
+                      .tuple())
 
-        for loc in self.tilemap:
-            tile = self.tilemap[loc]
-            # The second [] can be performed because the type is a list.
-            # Multiply has to be done first for the subtraction to work.
-            surf.blit(self.game.assets[tile.type][tile.variant],
-                      tile.pos.multiply(self.tile_size).sub(offset).tuple())
+        # Optimization to only render tiles that are visible.
+        top_left_tile_x = offset[0] // self.tile_size
+        top_left_tile_y = offset[1] // self.tile_size
+        # Add one to compensate for rounding errors.
+        top_right_tile_x = (offset[0] + surf.get_width()) // self.tile_size + 1
+        top_right_tile_y = (offset[1] + surf.get_height()) // self.tile_size + 1
+        for x in range(top_left_tile_x, top_right_tile_x):
+            for y in range(top_left_tile_y, top_right_tile_y):
+                loc = str(x) + ';' + str(y)
+                if loc in self.tilemap:
+                    tile = self.tilemap[loc]
+                    # The second [] can be performed because the type is a list.
+                    # Multiply has to be done first for the subtraction to work.
+                    surf.blit(self.game.assets[tile.type][tile.variant],
+                              tile.pos
+                              .multiply(self.tile_size)
+                              .sub(offset)
+                              .tuple())
 
     def physics_rects_around(self, pos):
         rects = []
