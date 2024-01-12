@@ -16,6 +16,18 @@ class PhysicsEntity:
                            'down': False,
                            'right': False}
 
+        self.action = ''
+        # To account for images with padding.
+        self.anim_offset = (-3, -3)
+        self.flip = False
+        self.set_action('idle')
+
+    def set_action(self, action):
+        if action != self.action:
+            self.action = action
+            self.animation = self.game.assets[self.type +
+                                              '/' + self.action].copy()
+
     def update(self, tilemap, movement=(0, 0)):
         self.collisions = {'up': False,
                            'left': False,
@@ -25,8 +37,18 @@ class PhysicsEntity:
         frame_movement = (movement[0] + self.velocity[0],
                           movement[1] + self.velocity[1])
 
+        self.handle_animation(movement)
         self.handle_collisions(tilemap, frame_movement)
         self.apply_gravity()
+
+    def handle_animation(self, movement):
+        if movement[0] > 0:
+            self.flip = False
+        if movement[0] < 0:
+            self.flip = True
+
+        if self.animation:
+            self.animation.update()
 
     def handle_collisions(self, tilemap, frame_movement):
         # Usually want to update each axis separately, as below:
@@ -68,5 +90,8 @@ class PhysicsEntity:
         return pygame.Rect(self.pos.x, self.pos.y, self.size[0], self.size[1])
 
     def render(self, surf, offset=(0, 0)):
-        surf.blit(self.game.assets['player'],
-                  self.pos.sub(offset).tuple())
+        surf.blit(pygame.transform.flip(self.animation.img(), self.flip, False),
+                  self.pos
+                  .sub(offset)
+                  .add(self.anim_offset)
+                  .tuple())
