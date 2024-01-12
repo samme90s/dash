@@ -2,10 +2,10 @@ import sys
 
 import pygame
 
+from scripts.clouds import Clouds
 from scripts.entities import PhysicsEntity
 from scripts.tilemap import Tilemap
 from scripts.utils import load_image, load_images
-from scripts.clouds import Clouds
 
 
 class Game:
