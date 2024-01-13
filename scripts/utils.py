@@ -41,7 +41,6 @@ class Animation:
             # Loops the frame using modulo.
             self.frame = ((self.frame + 1) % self.frame_max)
         else:
-            # Minus one to fix indexing errors.
             self.frame = min(self.frame + 1, self.frame_max)
             if self.frame >= self.frame_max:
                 self.done = True
