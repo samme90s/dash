@@ -5,7 +5,7 @@ import pygame
 from scripts.clouds import Clouds
 from scripts.entities import Player
 from scripts.tilemap import Tilemap
-from scripts.utils import Animation, load_image, load_images
+from scripts.utils import Animation, Key, load_image, load_images
 
 
 class Game:
@@ -88,24 +88,26 @@ class Game:
 
     def handle_events(self):
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            # Keys should be arrow keys instead and preferably x and z for
-            # other actions. This is more universal for different keyboard
-            # layouts, but for my sake I'll use WASD.
-            if event.type == pygame.KEYDOWN:
-                if event.key in (pygame.K_a, pygame.K_LEFT):
-                    self.movement[0] = True
-                if event.key in (pygame.K_d, pygame.K_RIGHT):
-                    self.movement[1] = True
-                if event.key in (pygame.K_SPACE, pygame.K_UP):
-                    self.player.velocity[1] = -3
-            if event.type == pygame.KEYUP:
-                if event.key in (pygame.K_a, pygame.K_LEFT):
-                    self.movement[0] = False
-                if event.key in (pygame.K_d, pygame.K_RIGHT):
-                    self.movement[1] = False
+            self._handle_window(event)
+            self._handle_keys(event)
+
+    def _handle_window(self, event):
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
+    def _handle_keys(self, event):
+        Key((pygame.K_a, pygame.K_LEFT),
+            lambda: self._set_movement(0, True),
+            lambda: self._set_movement(0, False)).check(event)
+        Key((pygame.K_d, pygame.K_RIGHT),
+            lambda: self._set_movement(1, True),
+            lambda: self._set_movement(1, False)).check(event)
+        Key((pygame.K_SPACE, pygame.K_UP),
+            lambda: self.player.jump()).check(event)
+
+    def _set_movement(self, index, bool):
+        self.movement[index] = bool
 
 
 Game().run()
