@@ -1,4 +1,5 @@
 import os
+from abc import ABC, abstractmethod
 
 import pygame
 
@@ -47,3 +48,43 @@ class Animation:
 
     def img(self):
         return self.images[int(self.frame / self.img_duration)]
+
+
+class Event(ABC):
+    def __init__(self, code, down_action, up_action=None):
+        if type(code) is tuple:
+            self.code = code
+        else:
+            self.code = (code,)
+        self.down_action = down_action
+        self.up_action = up_action
+
+    @abstractmethod
+    def check(self, event, event_types=None):
+        raise NotImplementedError
+
+
+class Key(Event):
+    def __init__(self, key, down_action, up_action=None):
+        super().__init__(key, down_action, up_action)
+
+    def check(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key in self.code:
+                self.down_action()
+        elif self.up_action and event.type == pygame.KEYUP:
+            if event.key in self.code:
+                self.up_action()
+
+
+class Mouse(Event):
+    def __init__(self, button, down_action, up_action=None):
+        super().__init__(button, down_action, up_action)
+
+    def check(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button in self.code:
+                self.down_action()
+        elif self.up_action and event.type == pygame.MOUSEBUTTONUP:
+            if event.button in self.code:
+                self.up_action()
