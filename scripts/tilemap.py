@@ -1,9 +1,9 @@
 import pygame
 
-from scripts.tile import Tile
+from scripts.assets import AssetTile
 from scripts.vector2 import Vector2
 
-NEIGHBOR_OFFSETS = [(-1, 0),
+NEIGHBOR_OFFSETS = ((-1, 0),
                     (-1, -1),
                     (0, -1),
                     (1, -1),
@@ -11,11 +11,10 @@ NEIGHBOR_OFFSETS = [(-1, 0),
                     (0, 0),
                     (-1, 1),
                     (0, 1),
-                    (1, 1)]
-# More efficient to look up values in a set than a list, also true for
-# dictionaries.
-PHYSICS_TILES = {'grass',
-                 'stone'}
+                    (1, 1))
+
+PHYSICS_TILES = {AssetTile.GRASS,
+                 AssetTile.STONE}
 
 
 class Tilemap:
@@ -25,17 +24,11 @@ class Tilemap:
         self.tilemap = {}
         self.offgrid_tiles = []
 
-        for i in range(10):
-            grass_v2 = Vector2((3 + i, 10))
-            self.tilemap[grass_v2.json()] = Tile('grass', 1, grass_v2)
-            stone_v2 = Vector2((10, 5 + i))
-            self.tilemap[stone_v2.json()] = Tile('stone', 1, stone_v2)
-
     def render(self, surf, offset=(0, 0)):
         # Offgrid tiles are often rendered as decorations, therefor we should
         # render them first so that they are applied behind the grid.
         for tile in self.offgrid_tiles:
-            surf.blit(self.game.assets[tile.type][tile.variant],
+            surf.blit(self.game.assets.get_tiles(tile.type, tile.variant),
                       tile.pos
                       .sub(offset)
                       .tuple())
@@ -51,13 +44,12 @@ class Tilemap:
                 loc = str(x) + ';' + str(y)
                 if loc in self.tilemap:
                     tile = self.tilemap[loc]
-                    # The second [] can be performed because the type is a list.
-                    # Multiply has to be done first for the subtraction to work.
-                    surf.blit(self.game.assets[tile.type][tile.variant],
-                              tile.pos
-                              .multiply(self.tile_size)
-                              .sub(offset)
-                              .tuple())
+                    surf.blit(
+                        self.game.assets.get_tiles(tile.type, tile.variant),
+                        tile.pos
+                        .multiply(self.tile_size)
+                        .sub(offset)
+                        .tuple())
 
     def physics_rects_around(self, pos):
         rects = []

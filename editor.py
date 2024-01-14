@@ -2,12 +2,19 @@ import sys
 
 import pygame
 
-from scripts.tile import Tile
+from scripts.assets import Assets, AssetTile
 from scripts.tilemap import Tilemap
-from scripts.utils import Key, Mouse, load_images
+from scripts.utils import Key, Mouse
 from scripts.vector2 import Vector2
 
 RENDER_SCALE = 2.0
+
+
+class Tile:
+    def __init__(self, type: AssetTile, variant: int, pos: Vector2):
+        self.type = type
+        self.variant = variant
+        self.pos = pos.copy()
 
 
 class Editor:
@@ -20,12 +27,7 @@ class Editor:
 
         self.clock = pygame.time.Clock()
 
-        self.assets = {
-            'decor': load_images('tiles/decor'),
-            'grass': load_images('tiles/grass'),
-            'large_decor': load_images('tiles/large_decor'),
-            'stone': load_images('tiles/stone')
-        }
+        self.assets = Assets()
 
         self.movement = [False, False, False, False]
 
@@ -34,8 +36,8 @@ class Editor:
         self.scroll = [0, 0]
         self.render_scroll = [0, 0]
 
-        self.tile_list = list(self.assets)
         self.tile_group = 0
+        self.tile_type = tuple(AssetTile)[self.tile_group]
         self.tile_variant = 0
         self.tile_pos = Vector2((0, 0))
 
@@ -83,8 +85,9 @@ class Editor:
                                      self.tilemap.tile_size)))
 
     def handle_tile_preview(self):
-        current_tile_img = (self.assets[self.tile_list[self.tile_group]]
-                            [self.tile_variant]).copy()
+        current_tile_img = self.assets.get_tiles(
+            self.tile_type,
+            self.tile_variant).copy()
         current_tile_img.set_alpha(155)
         if self.ongrid:
             self.display.blit(current_tile_img,
@@ -102,7 +105,7 @@ class Editor:
     def handle_tile_placement(self):
         if self.clicking and self.ongrid:
             self.tilemap.tilemap[self.tile_pos.json()] = Tile(
-                self.tile_list[self.tile_group],
+                self.tile_type,
                 self.tile_variant,
                 self.tile_pos)
 
@@ -112,7 +115,7 @@ class Editor:
             if tile_loc in self.tilemap.tilemap:
                 del self.tilemap.tilemap[tile_loc]
             for tile in self.tilemap.offgrid_tiles.copy():
-                tile_img = self.assets[tile.type][tile.variant]
+                tile_img = self.assets.get_tiles(tile.type, tile.variant)
                 tile_r = pygame.Rect(*tile.pos, *tile_img.get_size())
                 if tile_r.collidepoint(self.mpos):
                     self.tilemap.offgrid_tiles.remove(tile)
@@ -137,20 +140,20 @@ class Editor:
               lambda: self._set_right_clicking(False)).check(event)
         if self.shift:
             Mouse(4,
-                  lambda: self._scroll_tile_variant(-1)).check(event)
-            Mouse(5,
                   lambda: self._scroll_tile_variant(1)).check(event)
+            Mouse(5,
+                  lambda: self._scroll_tile_variant(-1)).check(event)
         else:
             Mouse(4,
-                  lambda: self._scroll_tile_group(-1)).check(event)
+                  lambda: self._scroll_tile_type(1)).check(event)
             Mouse(5,
-                  lambda: self._scroll_tile_group(1)).check(event)
+                  lambda: self._scroll_tile_type(-1)).check(event)
 
     def _set_clicking(self, bool):
         self.clicking = bool
         if not self.ongrid:
             self.tilemap.offgrid_tiles.append(
-                Tile(self.tile_list[self.tile_group],
+                Tile(self.tile_type,
                      self.tile_variant,
                      Vector2((self.mpos[0] + self.scroll[0],
                               self.mpos[1] + self.scroll[1]))))
@@ -160,11 +163,11 @@ class Editor:
 
     def _scroll_tile_variant(self, amount):
         self.tile_variant = ((self.tile_variant + amount) %
-                             len(self.assets[self.tile_list[self.tile_group]]))
+                             len(self.assets.get_tiles(self.tile_type)))
 
-    def _scroll_tile_group(self, amount):
-        self.tile_group = ((self.tile_group + amount) %
-                           len(self.tile_list))
+    def _scroll_tile_type(self, amount):
+        self.tile_group = (self.tile_group + amount) % len(AssetTile)
+        self.tile_type = tuple(AssetTile)[self.tile_group]
         self.tile_variant = 0
 
     def _handle_keys(self, event):

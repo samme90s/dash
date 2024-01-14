@@ -1,14 +1,13 @@
 import pygame
 
-from scripts.vector2 import Vector2
+from scripts.assets import AssetAnim
 
 
 class PhysicsEntity:
     def __init__(self, game, e_type, pos, size):
         self.game = game
-        self.type = e_type
-        # Possibly use pygame.Vector2 instead or pygame.FRect?
-        self.pos = Vector2(pos)
+        self.type = e_type.upper()
+        self.pos = pos.copy()
         self.size = size
         self.velocity = [0, 0]
         self.collisions = {'up': False,
@@ -16,17 +15,16 @@ class PhysicsEntity:
                            'down': False,
                            'right': False}
 
-        self.action = ''
         # To account for images with padding.
         self.anim_offset = (-3, -3)
         self.flip = False
-        self.set_action('idle')
+        self.action = ''
+        self.set_action(AssetAnim[f'{self.type}_IDLE'])
 
     def set_action(self, action):
         if action != self.action:
             self.action = action
-            self.animation = self.game.assets[self.type +
-                                              '/' + self.action].copy()
+            self.animation = self.game.assets.get_anim(action).copy()
 
     def update(self, tilemap, movement=(0, 0)):
         self.collisions = {'up': False,
@@ -55,7 +53,7 @@ class PhysicsEntity:
         self.pos.x += frame_movement[0]
         entity_rect = self.rect()
         for rect in tilemap.physics_rects_around(self.pos):
-            # This can be simplified if using FRect as pos.
+            # This can be simplified if using FRect (FloatRect) as pos.
             if entity_rect.colliderect(rect):
                 if frame_movement[0] > 0:
                     entity_rect.right = rect.left
@@ -87,7 +85,7 @@ class PhysicsEntity:
 
     def rect(self):
         # This is often updated therefor using a function here is better.
-        return pygame.Rect(self.pos.x, self.pos.y, self.size[0], self.size[1])
+        return pygame.Rect(*self.pos, *self.size)
 
     def render(self, surf, offset=(0, 0)):
         surf.blit(pygame.transform.flip(self.animation.img(), self.flip, False),
@@ -112,11 +110,11 @@ class Player(PhysicsEntity):
             self.air_time = 0
 
         if self.air_time > 4:
-            self.set_action('jump')
+            self.set_action(AssetAnim.PLAYER_JUMP)
         elif movement[0] != 0:
-            self.set_action('run')
+            self.set_action(AssetAnim.PLAYER_RUN)
         else:
-            self.set_action('idle')
+            self.set_action(AssetAnim.PLAYER_IDLE)
 
     def jump(self):
         self.velocity[1] = -3

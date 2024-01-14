@@ -2,10 +2,12 @@ import sys
 
 import pygame
 
+from scripts.assets import AssetLayer, Assets
 from scripts.clouds import Clouds
 from scripts.entities import Player
 from scripts.tilemap import Tilemap
-from scripts.utils import Animation, Key, load_image, load_images
+from scripts.utils import Key
+from scripts.vector2 import Vector2
 
 
 class Game:
@@ -20,27 +22,11 @@ class Game:
 
         self.movement = [False, False]
 
-        self.assets = {
-            'background': load_image('background.png'),
-            'clouds': load_images('clouds'),
-            'decor': load_images('tiles/decor'),
-            'grass': load_images('tiles/grass'),
-            'large_decor': load_images('tiles/large_decor'),
-            'player': load_image('entities/player.png'),
-            'stone': load_images('tiles/stone'),
-            'player/idle': Animation(load_images('entities/player/idle'),
-                                     img_dur=6),
-            'player/run': Animation(load_images('entities/player/run'),
-                                    img_dur=4),
-            'player/slide': Animation(load_images('entities/player/slide')),
-            'player/jump': Animation(load_images('entities/player/jump')),
-            'player/wall_slide': Animation(
-                load_images('entities/player/wall_slide'))
-        }
+        self.assets = Assets()
 
-        self.clouds = Clouds(self.assets['clouds'], count=16)
+        self.clouds = Clouds(self.assets.get_layers(AssetLayer.CLOUD), count=16)
 
-        self.player = Player(self, (50, 50), (8, 15))
+        self.player = Player(self, Vector2((50, 50)), (8, 15))
 
         self.tilemap = Tilemap(self, tile_size=16)
 
@@ -56,14 +42,11 @@ class Game:
             self.handle_tilemap()
             self.handle_player()
             self.handle_events()
-
-            self.screen.blit(pygame.transform.scale(
-                self.display, self.screen.get_size()), (0, 0))
-            pygame.display.update()
-            self.clock.tick(60)
+            self.handle_screen()
 
     def clear(self):
-        self.display.blit(self.assets['background'], (0, 0))
+        self.display.blit(self.assets.get_layers(
+            AssetLayer.BACKGROUND, 0), (0, 0))
 
     def handle_scroll(self):
         self.scroll[0] += (self.player.rect().centerx -
@@ -108,6 +91,13 @@ class Game:
 
     def _set_movement(self, index, bool):
         self.movement[index] = bool
+
+    def handle_screen(self):
+        self.screen.blit(
+            pygame.transform.scale(self.display, self.screen.get_size()),
+            (0, 0))
+        pygame.display.update()
+        self.clock.tick(60)
 
 
 Game().run()
