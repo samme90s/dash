@@ -3,18 +3,12 @@ import sys
 import pygame
 
 from scripts.assets import Assets, AssetTile
+from scripts.tile import Tile
 from scripts.tilemap import Tilemap
 from scripts.utils import Key, Mouse
 from scripts.vector2 import Vector2
 
 RENDER_SCALE = 2.0
-
-
-class Tile:
-    def __init__(self, type: AssetTile, variant: int, pos: Vector2):
-        self.type = type
-        self.variant = variant
-        self.pos = pos.copy()
 
 
 class Editor:
@@ -32,6 +26,10 @@ class Editor:
         self.movement = [False, False, False, False]
 
         self.tilemap = Tilemap(self, tile_size=16)
+        try:
+            self.tilemap.load('map.json')
+        except FileNotFoundError:
+            pass
 
         self.scroll = [0, 0]
         self.render_scroll = [0, 0]
@@ -116,7 +114,8 @@ class Editor:
                 del self.tilemap.tilemap[tile_loc]
             for tile in self.tilemap.offgrid_tiles.copy():
                 tile_img = self.assets.get_tiles(tile.type, tile.variant)
-                tile_r = pygame.Rect(*tile.pos, *tile_img.get_size())
+                tile_r = pygame.Rect(*tile.pos.sub(self.scroll),
+                                     *tile_img.get_size())
                 if tile_r.collidepoint(self.mpos):
                     self.tilemap.offgrid_tiles.remove(tile)
 
@@ -185,6 +184,10 @@ class Editor:
             lambda: self._set_movement(3, False)).check(event)
         Key(pygame.K_g,
             lambda: self._toggle_ongrid()).check(event)
+        Key(pygame.K_t,
+            lambda: self.tilemap.autotile()).check(event)
+        Key(pygame.K_o,
+            lambda: self.tilemap.save('map.json')).check(event)
         Key(pygame.K_LSHIFT,
             lambda: self._set_shift(True),
             lambda: self._set_shift(False)).check(event)
