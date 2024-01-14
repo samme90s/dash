@@ -48,14 +48,21 @@ class Assets:
             'stone': load_images('tiles/stone')
         }
 
-    def get_layer(self, type: AssetLayer):
-        return self.layers[type.value]
-
-    def get_tile(self, type: AssetTile, variant: int):
-        return self.tiles[type.value][variant]
-
-    def get_tiles(self, type: AssetTile):
-        return self.tiles[type.value]
-
     def get_anim(self, type: AssetAnim):
         return self.anims[type.value]
+
+    def get_layers(self, type: AssetLayer, variant=-1):
+        if (variant < 0):
+            return self.layers[type.value]
+        elif variant >= 0 and self.layers[type.value].isinstance(list):
+            return self.layers[type.value][variant]
+
+        raise FileNotFoundError()
+
+    def get_tiles(self, type: AssetTile, variant=-1):
+        if variant < 0:
+            return self.tiles[type.value]
+        elif variant >= 0 and self.tiles[type.value].isinstance(list):
+            return self.tiles[type.value][variant]
+
+        raise FileNotFoundError()
