@@ -29,6 +29,10 @@ class Game:
         self.player = Player(self, Vector2((50, 50)), (8, 15))
 
         self.tilemap = Tilemap(self, tile_size=16)
+        try:
+            self.tilemap.load('map.json')
+        except FileNotFoundError:
+            pass
 
         self.scroll = [0, 0]
         self.render_scroll = [0, 0]
