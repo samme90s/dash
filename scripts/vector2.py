@@ -6,6 +6,9 @@ class Vector2:
         yield self.x
         yield self.y
 
+    def copy(self):
+        return Vector2((self.x, self.y))
+
     def multiply(self, scalar):
         return Vector2((self.x * scalar, self.y * scalar))
 
