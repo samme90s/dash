@@ -1,11 +1,19 @@
+import random
+
+
 class Particle:
-    def __init__(self, game, asset, pos, velocity=[0, 0], frame=0):
+    def __init__(self, game, asset, pos, velocity=[0, 0], random_frame=True):
         self.game = game
         self.asset = asset
         self.pos = pos.deepcopy()
         self.velocity = list(velocity)
         self.animation = self.game.assets.get_anim(asset).deepcopy()
-        self.animation.frame = frame
+        if random_frame:
+            # Reduce by on to avoid the last frame being selected.
+            self.animation.frame = random.randint(0,
+                                                  len(self.animation.images) *
+                                                  (self.animation.img_duration -
+                                                   1))
 
     def update(self):
         kill = False
