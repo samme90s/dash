@@ -6,7 +6,7 @@ from scripts.assets import AssetAnim
 class PhysicsEntity:
     def __init__(self, game, asset, pos, size):
         self.game = game
-        self.asset = asset
+        self.asset = None
         self.pos = pos.deepcopy()
         self.size = size
         self.velocity = [0, 0]
