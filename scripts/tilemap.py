@@ -103,7 +103,7 @@ class Tilemap:
         top_right_tile_y = (offset[1] + surf.get_height()) // self.tile_size + 1
         for x in range(top_left_tile_x, top_right_tile_x):
             for y in range(top_left_tile_y, top_right_tile_y):
-                loc = str(x) + ';' + str(y)
+                loc = f'{x};{y}'
                 if loc in self.tilemap:
                     tile = self.tilemap[loc]
                     surf.blit(
