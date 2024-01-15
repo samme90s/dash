@@ -82,7 +82,8 @@ class Editor:
 
     def _set_clicking(self, bool):
         self.clicking = bool
-        if not self.ongrid:
+        # This prevents accidental placement of multiple instances.
+        if bool and not self.ongrid:
             self.tilemap.offgrid_tiles.append(
                 Tile(self.tile_type,
                      self.tile_variant,
