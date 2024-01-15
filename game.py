@@ -66,7 +66,7 @@ class Game:
             self._handle_spawns()
             self._handle_particles()
             self._handle_events()
-            self.__dev()
+            # self.__dev()
             self._handle_screen()
 
     def _clear(self):
@@ -105,8 +105,7 @@ class Game:
                     Particle(self,
                              AssetAnim.PARTICLE_LEAF,
                              pos,
-                             velocity=[-0.1, 0.3],
-                             frame=random.randint(0, 20)))
+                             velocity=[-0.1, 0.3]))
 
     def _handle_particles(self):
         for particle in self.particles.copy():
