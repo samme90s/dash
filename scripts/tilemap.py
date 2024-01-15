@@ -72,6 +72,26 @@ class Tilemap:
                                            tile_variant,
                                            tile_pos))
 
+    def extract(self, id_pairs, keep=False):
+        matches = []
+        for tile in self.offgrid_tiles.copy():
+            if (tile.type, tile.variant) in id_pairs:
+                matches.append(tile.deepcopy())
+                if not keep:
+                    self.offgrid_tiles.remove(tile)
+
+        for loc in self.tilemap:
+            tile = self.tilemap[loc]
+            if (tile.type, tile.variant) in id_pairs:
+                matches.append(tile.deepcopy())
+                # Converting to pixels.
+                matches[-1].pos = matches[-1].pos.deepcopy()
+                matches[-1].pos.multiply(self.tile_size)
+                if not keep:
+                    del self.tilemap[loc]
+
+        return matches
+
     def automap(self):
         for loc in self.tilemap:
             tile = self.tilemap[loc]
