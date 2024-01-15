@@ -20,6 +20,6 @@ class Particle:
     def render(self, surf, offset=(0, 0)):
         img = self.animation.img()
         surf.blit(img, self.pos
-                  .sub((offset[0] - img.get_width() // 2,
-                        offset[1] - img.get_height() // 2))
+                  .sub((offset[0] + img.get_width() // 2,
+                        offset[1] + img.get_height() // 2))
                   .tuple())
