@@ -27,6 +27,10 @@ def load_images(path):
 
 class Animation:
     def __init__(self, images, img_dur=5, loop=True):
+        if images is None or not len(images):
+            raise ValueError('images must not be empty')
+        if img_dur <= 0:
+            raise ValueError('img_dur must be greater than 0')
         self.images = images.copy()
         self.img_duration = img_dur
         self.loop = loop
@@ -40,7 +44,7 @@ class Animation:
     def update(self):
         if self.loop:
             # Loops the frame using modulo.
-            self.frame = ((self.frame + 1) % self.frame_max)
+            self.frame = (self.frame + 1) % self.frame_max
         else:
             self.frame = min(self.frame + 1, self.frame_max)
             if self.frame >= self.frame_max:
