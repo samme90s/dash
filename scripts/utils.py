@@ -27,14 +27,14 @@ def load_images(path):
 
 class Animation:
     def __init__(self, images, img_dur=5, loop=True):
-        self.images = images
+        self.images = images.copy()
         self.img_duration = img_dur
         self.loop = loop
         self.done = False
         self.frame = 0
         self.frame_max = img_dur * len(images) - 1
 
-    def copy(self):
+    def deepcopy(self):
         return Animation(self.images, self.img_duration, self.loop)
 
     def update(self):

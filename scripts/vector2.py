@@ -6,7 +6,7 @@ class Vector2:
         yield self.x
         yield self.y
 
-    def copy(self):
+    def deepcopy(self):
         return Vector2((self.x, self.y))
 
     def multiply(self, scalar):
