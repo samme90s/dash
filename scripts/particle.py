@@ -1,10 +1,11 @@
 class Particle:
     def __init__(self, game, asset, pos, velocity=[0, 0], frame=0):
         self.game = game
+        self.asset = asset
         self.pos = pos.deepcopy()
         self.velocity = list(velocity)
         self.animation = self.game.assets.get_anim(asset).deepcopy()
-        self.frame = frame
+        self.animation.frame = frame
 
     def update(self):
         kill = False

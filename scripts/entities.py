@@ -6,6 +6,7 @@ from scripts.assets import AssetAnim
 class PhysicsEntity:
     def __init__(self, game, asset, pos, size):
         self.game = game
+        self.asset = asset
         self.pos = pos.deepcopy()
         self.size = size
         self.velocity = [0, 0]
@@ -17,13 +18,12 @@ class PhysicsEntity:
         # To account for images with padding.
         self.anim_offset = (-3, -3)
         self.flip = False
-        self.action = ''
-        self.set_action(asset)
+        self.set_anim(asset)
 
-    def set_action(self, action):
-        if action != self.action:
-            self.action = action
-            self.animation = self.game.assets.get_anim(action).deepcopy()
+    def set_anim(self, asset):
+        if asset != self.asset:
+            self.asset = asset
+            self.animation = self.game.assets.get_anim(asset).deepcopy()
 
     def update(self, tilemap, movement=(0, 0)):
         self.collisions = {'up': False,
@@ -109,11 +109,11 @@ class Player(PhysicsEntity):
             self.air_time = 0
 
         if self.air_time > 4:
-            self.set_action(AssetAnim.PLAYER_JUMP)
+            self.set_anim(AssetAnim.PLAYER_JUMP)
         elif movement[0] != 0:
-            self.set_action(AssetAnim.PLAYER_RUN)
+            self.set_anim(AssetAnim.PLAYER_RUN)
         else:
-            self.set_action(AssetAnim.PLAYER_IDLE)
+            self.set_anim(AssetAnim.PLAYER_IDLE)
 
     def jump(self):
         self.velocity[1] = -3
