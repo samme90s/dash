@@ -4,10 +4,10 @@ from scripts.assets import AssetAnim
 
 
 class PhysicsEntity:
-    def __init__(self, game, e_type, pos, size):
+    def __init__(self, game, asset, pos, size):
         self.game = game
-        self.type = e_type.upper()
-        self.pos = pos.copy()
+        self.asset = asset
+        self.pos = pos.deepcopy()
         self.size = size
         self.velocity = [0, 0]
         self.collisions = {'up': False,
@@ -19,12 +19,12 @@ class PhysicsEntity:
         self.anim_offset = (-3, -3)
         self.flip = False
         self.action = ''
-        self.set_action(AssetAnim[f'{self.type}_IDLE'])
+        self.set_action(asset)
 
     def set_action(self, action):
         if action != self.action:
             self.action = action
-            self.animation = self.game.assets.get_anim(action).copy()
+            self.animation = self.game.assets.get_anim(action).deepcopy()
 
     def update(self, tilemap, movement=(0, 0)):
         self.collisions = {'up': False,
@@ -97,7 +97,7 @@ class PhysicsEntity:
 
 class Player(PhysicsEntity):
     def __init__(self, game, pos, size):
-        super().__init__(game, 'player', pos, size)
+        super().__init__(game, AssetAnim.PLAYER_IDLE, pos, size)
         self.air_time = 0
 
     def update(self, tilemap, movement=(0, 0)):
