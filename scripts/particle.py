@@ -9,7 +9,7 @@ class Particle:
         self.velocity = list(velocity)
         self.animation = self.game.assets.get_anim(asset).deepcopy()
         if random_frame:
-            # Reduce by on to avoid the last frame being selected.
+            # Reduce by one to avoid the last frame being selected.
             self.animation.frame = random.randint(0,
                                                   len(self.animation.images) *
                                                   (self.animation.img_duration -
