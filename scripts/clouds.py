@@ -1,6 +1,6 @@
 import random
 
-from scripts.vector2 import Vector2
+from scripts.utils import Vector2
 
 
 class Cloud:

@@ -4,56 +4,44 @@ import sys
 
 import pygame
 
-from scripts.assets import AssetAnim, AssetLayer, Assets, AssetTile
+from app import App
+from scripts.assets import AssetAnim, AssetLayer, AssetTile
 from scripts.clouds import Clouds
 from scripts.entities import Player
 from scripts.particle import Particle
-from scripts.tilemap import Tilemap
-from scripts.utils import Key
-from scripts.vector2 import Vector2
+from scripts.utils import Key, Vector2
 
 # The number decides how often something spawns.
 # >number = less spawns
 SPAWN_RATE = 40_960
 
 
-class Game:
+class Game(App):
     def __init__(self):
-        pygame.init()
-
-        pygame.display.set_caption('python')
-        self.screen = pygame.display.set_mode((1280, 960))
-        self.display = pygame.Surface((320, 240))
-
-        self.clock = pygame.time.Clock()
-
-        self.movement = [False, False]
+        super().__init__(title='python',
+                         map_path='map.json',
+                         res_base=(320, 180),
+                         res_scale=2.0)
 
         self.binds = (
             Key((pygame.K_a, pygame.K_LEFT),
-                lambda: self._set_movement(0, True),
-                lambda: self._set_movement(0, False)),
+                lambda: self.direction.toggle_left(),
+                lambda: self.direction.toggle_left()),
             Key((pygame.K_d, pygame.K_RIGHT),
-                lambda: self._set_movement(1, True),
-                lambda: self._set_movement(1, False)),
+                lambda: self.direction.toggle_right(),
+                lambda: self.direction.toggle_right()),
             Key((pygame.K_SPACE, pygame.K_UP),
                 lambda: self.player.jump()))
 
-        self.assets = Assets()
         self.clouds = Clouds(self.assets.get_layers(AssetLayer.CLOUD), count=16)
-        self.player = Player(self, Vector2((50, 50)), (8, 15))
-        self.tilemap = Tilemap(self, tile_size=16)
-        self.tilemap.load('map.json')
+        self.player = Player(self, (8, 15), Vector2((50, 50)))
 
         self.particles = []
         self.spawns = []
-        for tree in self.tilemap.extract(
-                [(AssetTile.LARGE_DECOR, 2)], keep=True):
+        for tree in self.tilemap.extract([(AssetTile.LARGE_DECOR, 2)],
+                                         keep=True):
             self.spawns.append(
                 pygame.Rect(*tree.pos.add((4, 4)), 23, 13))
-
-        self.scroll = [0, 0]
-        self.render_scroll = [0, 0]
 
     def run(self):
         while True:
@@ -66,21 +54,21 @@ class Game:
             self._handle_spawns()
             self._handle_particles()
             self._handle_events()
-            # self.__dev()
+            self.__dev()
             self._handle_screen()
 
     def _clear(self):
-        self.display.blit(self.assets.get_layers(
-            AssetLayer.BACKGROUND, 0), (0, 0))
+        self.display.blit(self.assets.get_layers(AssetLayer.BACKGROUND, 0),
+                          (0, 0))
 
     def _handle_scroll(self):
-        self.scroll[0] += (self.player.rect().centerx -
-                           self.display.get_width() / 2 -
-                           self.scroll[0]) / 30
-        self.scroll[1] += (self.player.rect().centery -
-                           self.display.get_height() / 2 -
-                           self.scroll[1]) / 30
-        self.render_scroll = (int(self.scroll[0]), int(self.scroll[1]))
+        self.scroll = self.scroll.add(((self.player.rect().centerx
+                                       - self.display.get_width() / 2
+                                       - self.scroll.x) / 30,
+                                       (self.player.rect().centery
+                                       - self.display.get_height() / 2
+                                       - self.scroll.y) / 30))
+        self.render_scroll = self.scroll.int()
 
     def _handle_clouds(self):
         self.clouds.update()
@@ -91,21 +79,21 @@ class Game:
 
     def _handle_player(self):
         self.player.update(self.tilemap,
-                           (self.movement[1] - self.movement[0],
-                            0))
+                           (self.direction.right - self.direction.left,
+                            self.direction.down - self.direction.up))
         self.player.render(self.display, offset=self.render_scroll)
 
     def _handle_spawns(self):
         for rect in self.spawns:
             if random.random() * SPAWN_RATE < rect.width * rect.height:
-                pos = (Vector2((rect.x, rect.y))
-                       .add((random.random() * rect.width,
-                             random.random() * rect.height)))
                 self.particles.append(
                     Particle(self,
                              AssetAnim.PARTICLE_LEAF,
-                             pos,
-                             velocity=[-0.1, 0.3]))
+                             Vector2((rect.x, rect.y))
+                             .add((random.random() * rect.width,
+                                  random.random() * rect.height)),
+                             velocity=(-0.1, 0.3),
+                             random_frame=True))
 
     def _handle_particles(self):
         for particle in self.particles.copy():
@@ -114,8 +102,8 @@ class Game:
                 # Makes the leaf float left and right over time.
                 # 0.035 reduces the speed of the sine curve loop.
                 # 0.3 reduces the amplitude of the sine curve.
-                particle.pos.x += (math.sin(particle.animation.frame * 0.035) *
-                                   0.3)
+                particle.pos.add(
+                    (math.sin(particle.animation.frame * 0.035) * 0.3, 0))
             particle.render(self.display, offset=self.render_scroll)
             if kill:
                 self.particles.remove(particle)
@@ -131,15 +119,11 @@ class Game:
             pygame.quit()
             sys.exit()
 
-    def _set_movement(self, index, bool):
-        self.movement[index] = bool
-
     def __dev(self):
         for rect in self.spawns:
-            adjusted_rect = pygame.Rect(rect.x - self.render_scroll[0],
-                                        rect.y - self.render_scroll[1],
-                                        rect.width,
-                                        rect.height)
+            adjusted_rect = pygame.Rect(*Vector2((rect.x, rect.y))
+                                        .sub(self.render_scroll),
+                                        *rect.size)
             pygame.draw.rect(self.display, (255, 0, 0), adjusted_rect, 1)
 
     def _handle_screen(self):

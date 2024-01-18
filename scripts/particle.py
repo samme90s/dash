@@ -1,12 +1,14 @@
 import random
 
+from scripts.utils import Vector2
+
 
 class Particle:
-    def __init__(self, game, asset, pos, velocity=[0, 0], random_frame=True):
+    def __init__(self, game, asset, pos, velocity=(0, 0), random_frame=True):
         self.game = game
         self.asset = asset
         self.pos = pos.deepcopy()
-        self.velocity = list(velocity)
+        self.velocity = Vector2(velocity)
         self.animation = self.game.assets.get_anim(asset).deepcopy()
         if random_frame:
             # Reduce by one to avoid the last frame being selected.

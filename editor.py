@@ -2,42 +2,32 @@ import sys
 
 import pygame
 
-from scripts.assets import Assets, AssetTile
+from app import App
+from scripts.assets import AssetTile
 from scripts.tile import Tile
-from scripts.tilemap import Tilemap
-from scripts.utils import Key, Mouse
-from scripts.vector2 import Vector2
-
-RENDER_SCALE = 4.0
+from scripts.utils import Key, Mouse, Vector2
 
 
-class Editor:
+class Editor(App):
     def __init__(self):
-        pygame.init()
-
-        pygame.display.set_caption('editor')
-        self.screen = pygame.display.set_mode((1280, 960))
-        self.display = pygame.Surface((320, 240))
-
-        self.clock = pygame.time.Clock()
-
-        self.assets = Assets()
-
-        self.movement = [False, False, False, False]
+        super().__init__(title='editor',
+                         map_path='map.json',
+                         res_base=(320, 180),
+                         res_scale=2.0)
 
         self.binds = (
             Key((pygame.K_a, pygame.K_LEFT),
-                lambda: self._set_movement(0, True),
-                lambda: self._set_movement(0, False)),
+                lambda: self.direction.toggle_left(),
+                lambda: self.direction.toggle_left()),
             Key((pygame.K_d, pygame.K_RIGHT),
-                lambda: self._set_movement(1, True),
-                lambda: self._set_movement(1, False)),
+                lambda: self.direction.toggle_right(),
+                lambda: self.direction.toggle_right()),
             Key((pygame.K_w, pygame.K_UP),
-                lambda: self._set_movement(2, True),
-                lambda: self._set_movement(2, False)),
+                lambda: self.direction.toggle_up(),
+                lambda: self.direction.toggle_up()),
             Key((pygame.K_s, pygame.K_DOWN),
-                lambda: self._set_movement(3, True),
-                lambda: self._set_movement(3, False)),
+                lambda: self.direction.toggle_down(),
+                lambda: self.direction.toggle_down()),
             Key(pygame.K_g,
                 lambda: self._toggle_ongrid()),
             Key(pygame.K_t,
@@ -47,51 +37,38 @@ class Editor:
             Key(pygame.K_TAB,
                 lambda: self._scroll_tile_type(1)),
             Mouse(1,
-                  lambda: self._set_clicking(True),
-                  lambda: self._set_clicking(False)
+                  lambda: self._toggle_click(),
+                  lambda: self._toggle_click()
                   ),
             Mouse(3,
-                  lambda: self._set_right_clicking(True),
-                  lambda: self._set_right_clicking(False)),
+                  lambda: self._toggle_r_click(),
+                  lambda: self._toggle_r_click()),
             Mouse(4,
                   lambda: self._scroll_tile_variant(1)),
             Mouse(5,
                   lambda: self._scroll_tile_variant(-1)))
-
-        self.tilemap = Tilemap(self, tile_size=16)
-        try:
-            self.tilemap.load('map.json')
-        except FileNotFoundError:
-            pass
-
-        self.scroll = [0, 0]
-        self.render_scroll = [0, 0]
 
         self.tile_group = 0
         self.tile_type = tuple(AssetTile)[self.tile_group]
         self.tile_variant = 0
         self.tile_pos = Vector2((0, 0))
 
-        self.mpos = (0, 0)
-        self.clicking = False
-        self.right_clicking = False
+        self.mpos = Vector2((0, 0))
+        self.click = False
+        self.r_click = False
         self.ongrid = True
 
-    def _set_movement(self, index, bool):
-        self.movement[index] = bool
-
-    def _set_clicking(self, bool):
-        self.clicking = bool
+    def _toggle_click(self):
+        self.click = not self.click
         # This prevents accidental placement of multiple instances.
         if bool and not self.ongrid:
             self.tilemap.offgrid_tiles.append(
                 Tile(self.tile_type,
                      self.tile_variant,
-                     Vector2((self.mpos[0] + self.scroll[0],
-                              self.mpos[1] + self.scroll[1]))))
+                     self.mpos.add(self.scroll)))
 
-    def _set_right_clicking(self, bool):
-        self.right_clicking = bool
+    def _toggle_r_click(self):
+        self.r_click = not self.r_click
 
     def _toggle_ongrid(self):
         self.ongrid = not self.ongrid
@@ -126,20 +103,20 @@ class Editor:
         self.display.fill((0, 0, 0))
 
     def _handle_scroll(self):
-        self.scroll[0] += (self.movement[1] - self.movement[0]) * 5
-        self.scroll[1] += (self.movement[3] - self.movement[2]) * 5
-        self.render_scroll = (int(self.scroll[0]), int(self.scroll[1]))
+        self.scroll = self.scroll.add(((self.direction.right -
+                                       self.direction.left) * 5,
+                                       (self.direction.down -
+                                       self.direction.up) * 5))
+        self.render_scroll = self.scroll.int()
 
     def _handle_tilemap(self):
         self.tilemap.render(self.display, offset=self.render_scroll)
 
     def _handle_positions(self):
-        self.mpos = pygame.mouse.get_pos()
-        self.mpos = (self.mpos[0] / RENDER_SCALE,
-                     self.mpos[1] / RENDER_SCALE)
-        self.tile_pos = Vector2((int((self.mpos[0] + self.scroll[0]) //
+        self.mpos = Vector2(pygame.mouse.get_pos()).divide(self.RES_SCALE)
+        self.tile_pos = Vector2((int((self.mpos.x + self.scroll.x) //
                                      self.tilemap.tile_size),
-                                 int((self.mpos[1] + self.scroll[1]) //
+                                 int((self.mpos.y + self.scroll.y) //
                                      self.tilemap.tile_size)))
 
     def _handle_tile_preview(self):
@@ -154,21 +131,19 @@ class Editor:
                               .sub(self.scroll)
                               .tuple())
         else:
-            self.display.blit(current_tile_img,
-                              self.mpos)
+            self.display.blit(current_tile_img, self.mpos.tuple())
 
-        self.display.blit(current_tile_img,
-                          (5, 5))
+        self.display.blit(current_tile_img, (5, 5))
 
     def _handle_tile_placement(self):
-        if self.clicking and self.ongrid:
+        if self.click and self.ongrid:
             self.tilemap.tilemap[self.tile_pos.json()] = Tile(
                 self.tile_type,
                 self.tile_variant,
                 self.tile_pos)
 
     def _handle_tile_removal(self):
-        if self.right_clicking:
+        if self.r_click:
             tile_loc = self.tile_pos.json()
             if tile_loc in self.tilemap.tilemap:
                 del self.tilemap.tilemap[tile_loc]
@@ -176,7 +151,7 @@ class Editor:
                 tile_img = self.assets.get_tiles(tile.type, tile.variant)
                 tile_r = pygame.Rect(*tile.pos.sub(self.scroll),
                                      *tile_img.get_size())
-                if tile_r.collidepoint(self.mpos):
+                if tile_r.collidepoint(self.mpos.tuple()):
                     self.tilemap.offgrid_tiles.remove(tile)
 
     def _handle_events(self):

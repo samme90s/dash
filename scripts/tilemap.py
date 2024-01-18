@@ -5,7 +5,7 @@ import pygame
 from scripts.assets import AssetTile
 from scripts.encoder import Encoder
 from scripts.tile import Tile
-from scripts.vector2 import Vector2
+from scripts.utils import Vector2
 
 NEIGHBOR_OFFSETS = ((-1, 0),
                     (-1, -1),

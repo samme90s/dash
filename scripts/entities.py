@@ -1,19 +1,18 @@
 import pygame
 
 from scripts.assets import AssetAnim
+from scripts.utils import Direction, Vector2
 
 
 class PhysicsEntity:
-    def __init__(self, game, asset, pos, size):
+    def __init__(self, game, asset, size, pos):
         self.game = game
         self.asset = None
-        self.pos = pos.deepcopy()
         self.size = size
-        self.velocity = [0, 0]
-        self.collisions = {'up': False,
-                           'left': False,
-                           'down': False,
-                           'right': False}
+        self.pos = pos.deepcopy()
+        self.velocity = Vector2((0, 0))
+        self.acceleration = Vector2((0, 0))
+        self.collisions = Direction()
 
         # To account for images with padding.
         self.anim_offset = (-3, -3)
@@ -26,61 +25,56 @@ class PhysicsEntity:
             self.animation = self.game.assets.get_anim(asset).deepcopy()
 
     def update(self, tilemap, movement=(0, 0)):
-        self.collisions = {'up': False,
-                           'left': False,
-                           'down': False,
-                           'right': False}
-
-        frame_movement = (movement[0] + self.velocity[0],
-                          movement[1] + self.velocity[1])
-
-        self.handle_animation(movement)
-        self.handle_collisions(tilemap, frame_movement)
+        self.velocity.set(movement)
+        self.collisions.reset()
+        self.handle_animation()
+        self.handle_collisions(tilemap)
         self.apply_gravity()
 
-    def handle_animation(self, movement):
-        if movement[0] > 0:
+    def handle_animation(self):
+        if self.velocity.x > 0:
             self.flip = False
-        if movement[0] < 0:
+        if self.velocity.x < 0:
             self.flip = True
 
         if self.animation:
             self.animation.update()
 
-    def handle_collisions(self, tilemap, frame_movement):
+    def handle_collisions(self, tilemap):
+        vector = self.velocity.add(self.acceleration)
         # Usually want to update each axis separately, as below:
-        self.pos.x += frame_movement[0]
+        self.pos.x += vector.x
         entity_rect = self.rect()
         for rect in tilemap.physics_rects_around(self.pos):
             # This can be simplified if using FRect (FloatRect) as pos.
             if entity_rect.colliderect(rect):
-                if frame_movement[0] > 0:
+                if vector.x > 0:
                     entity_rect.right = rect.left
-                    self.collisions['right'] = True
-                if frame_movement[0] < 0:
+                    self.collisions.right = True
+                if vector.x < 0:
                     entity_rect.left = rect.right
-                    self.collisions['left'] = True
+                    self.collisions.left = True
                 self.pos.x = entity_rect.x
 
-        self.pos.y += frame_movement[1]
+        self.pos.y += vector.y
         entity_rect = self.rect()
         for rect in tilemap.physics_rects_around(self.pos):
             if entity_rect.colliderect(rect):
-                if frame_movement[1] > 0:
+                if vector.y > 0:
                     entity_rect.bottom = rect.top
-                    self.collisions['down'] = True
-                if frame_movement[1] < 0:
+                    self.collisions.down = True
+                if vector.y < 0:
                     entity_rect.top = rect.bottom
-                    self.collisions['up'] = True
+                    self.collisions.up = True
                 self.pos.y = entity_rect.y
 
     def apply_gravity(self):
         # Apply gravity, with a terminal velocity.
         # Positive y is down (not like a cartesian plane from math).
-        self.velocity[1] = min(5, self.velocity[1] + 0.1)
+        self.acceleration.y = min(5, self.acceleration.y + 0.1)
 
-        if self.collisions['down'] or self.collisions['up']:
-            self.velocity[1] = 0
+        if self.collisions.down or self.collisions.up:
+            self.acceleration.y = 0
 
     def rect(self):
         # This is often updated therefor using a function here is better.
@@ -95,25 +89,25 @@ class PhysicsEntity:
 
 
 class Player(PhysicsEntity):
-    def __init__(self, game, pos, size):
-        super().__init__(game, AssetAnim.PLAYER_IDLE, pos, size)
+    def __init__(self, game, size, pos):
+        super().__init__(game, AssetAnim.PLAYER_IDLE, size, pos)
         self.air_time = 0
 
     def update(self, tilemap, movement=(0, 0)):
         super().update(tilemap, movement)
-        self.decide_action(movement)
+        self.decide_action()
 
-    def decide_action(self, movement):
+    def decide_action(self):
         self.air_time += 1
-        if self.collisions['down']:
+        if self.collisions.down:
             self.air_time = 0
 
         if self.air_time > 4:
             self.set_anim(AssetAnim.PLAYER_JUMP)
-        elif movement[0] != 0:
+        elif self.velocity.x != 0:
             self.set_anim(AssetAnim.PLAYER_RUN)
         else:
             self.set_anim(AssetAnim.PLAYER_IDLE)
 
     def jump(self):
-        self.velocity[1] = -3
+        self.acceleration.y = -3
