@@ -113,11 +113,11 @@ class Editor(App):
         self.tilemap.render(self.display, offset=self.render_scroll)
 
     def _handle_positions(self):
-        self.mpos = Vector2(pygame.mouse.get_pos()).divide(self.RES_SCALE)
-        self.tile_pos = Vector2((int((self.mpos.x + self.scroll.x) //
-                                     self.tilemap.tile_size),
-                                 int((self.mpos.y + self.scroll.y) //
-                                     self.tilemap.tile_size)))
+        self.mpos = Vector2(pygame.mouse.get_pos()).div(self.RES_SCALE)
+        self.tile_pos = (self.mpos
+                         .add(self.scroll)
+                         .div_f(self.tilemap.tile_size)
+                         .int())
 
     def _handle_tile_preview(self):
         current_tile_img = self.assets.get_tiles(
@@ -127,7 +127,7 @@ class Editor(App):
         if self.ongrid:
             self.display.blit(current_tile_img,
                               self.tile_pos
-                              .multiply(self.tilemap.tile_size)
+                              .mult(self.tilemap.tile_size)
                               .sub(self.scroll)
                               .tuple())
         else:
