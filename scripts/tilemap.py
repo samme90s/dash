@@ -85,7 +85,7 @@ class Tilemap:
             if (tile.type, tile.variant) in id_pairs:
                 matches.append(tile.deepcopy())
                 # Converting to pixels.
-                matches[-1].pos.multiply(self.tile_size)
+                matches[-1].pos.mult(self.tile_size)
                 if not keep:
                     del self.tilemap[loc]
 
@@ -128,7 +128,7 @@ class Tilemap:
                     surf.blit(
                         self.game.assets.get_tiles(tile.type, tile.variant),
                         tile.pos
-                        .multiply(self.tile_size)
+                        .mult(self.tile_size)
                         .sub(offset)
                         .tuple())
 

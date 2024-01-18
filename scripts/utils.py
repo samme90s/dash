@@ -102,11 +102,14 @@ class Vector2:
     def deepcopy(self):
         return Vector2((self.x, self.y))
 
-    def multiply(self, scalar):
+    def mult(self, scalar):
         return Vector2((self.x * scalar, self.y * scalar))
 
-    def divide(self, scalar):
+    def div(self, scalar):
         return Vector2((self.x / scalar, self.y / scalar))
+
+    def div_f(self, scalar):
+        return Vector2((self.x // scalar, self.y // scalar))
 
     def sub(self, offset):
         return Vector2((self.x - offset[0], self.y - offset[1]))
