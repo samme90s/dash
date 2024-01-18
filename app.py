@@ -19,6 +19,8 @@ class App(ABC):
         self.screen = pygame.display.set_mode((res_base[0] * res_scale,
                                                res_base[1] * res_scale))
         self.clock = pygame.time.Clock()
+        # Update this value every frame.
+        self.delta_time = 60 / 1000
 
         self.direction = Direction()
         self.assets = Assets()
@@ -34,3 +36,10 @@ class App(ABC):
     @abstractmethod
     def run(self):
         raise NotImplementedError
+
+    def _render(self):
+        self.screen.blit(
+            pygame.transform.scale(self.display, self.screen.get_size()),
+            (0, 0))
+        pygame.display.update()
+        self.delta_time = self.clock.tick(60) / 1000

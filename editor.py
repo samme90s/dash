@@ -93,11 +93,7 @@ class Editor(App):
             self._handle_tile_placement()
             self._handle_tile_removal()
             self._handle_events()
-
-            self.screen.blit(pygame.transform.scale(
-                self.display, self.screen.get_size()), (0, 0))
-            pygame.display.update()
-            self.clock.tick(60)
+            self._render()
 
     def _clear(self):
         self.display.fill((0, 0, 0))

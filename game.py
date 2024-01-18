@@ -54,8 +54,7 @@ class Game(App):
             self._handle_spawns()
             self._handle_particles()
             self._handle_events()
-            self.__dev()
-            self._handle_screen()
+            self._render()
 
     def _clear(self):
         self.display.blit(self.assets.get_layers(AssetLayer.BACKGROUND, 0),
@@ -125,13 +124,6 @@ class Game(App):
                                         .sub(self.render_scroll),
                                         *rect.size)
             pygame.draw.rect(self.display, (255, 0, 0), adjusted_rect, 1)
-
-    def _handle_screen(self):
-        self.screen.blit(
-            pygame.transform.scale(self.display, self.screen.get_size()),
-            (0, 0))
-        pygame.display.update()
-        self.clock.tick(60)
 
 
 Game().run()
