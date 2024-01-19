@@ -5,17 +5,17 @@ import pygame
 from scripts.assets import AssetTile
 from scripts.encoder import Encoder
 from scripts.tile import Tile
-from scripts.utils import Vector2
+from scripts.utils import Vec2
 
-NEIGHBOR_OFFSETS = ((-1, 0),
-                    (-1, -1),
-                    (0, -1),
-                    (1, -1),
-                    (1, 0),
-                    (0, 0),
-                    (-1, 1),
-                    (0, 1),
-                    (1, 1))
+NEIGHBOR_OFFSETS = (Vec2((-1, 0)),
+                    Vec2((-1, -1)),
+                    Vec2((0, -1)),
+                    Vec2((1, -1)),
+                    Vec2((1, 0)),
+                    Vec2((0, 0)),
+                    Vec2((-1, 1)),
+                    Vec2((0, 1)),
+                    Vec2((1, 1)))
 PHYSICS_TILES = {AssetTile.GRASS,
                  AssetTile.STONE}
 AUTOTILE_TYPES = {AssetTile.GRASS,
@@ -57,7 +57,7 @@ class Tilemap:
         for tile in map_data['tilemap'].values():
             tile_type = AssetTile[tile['type']]
             tile_variant = tile['variant']
-            tile_pos = Vector2(tile['pos'])
+            tile_pos = Vec2(tile['pos'])
             self.tilemap[tile_pos.json()] = Tile(tile_type,
                                                  tile_variant,
                                                  tile_pos)
@@ -67,7 +67,7 @@ class Tilemap:
         for tile in map_data['offgrid_tiles']:
             tile_type = AssetTile[tile['type']]
             tile_variant = tile['variant']
-            tile_pos = Vector2(tile['pos'])
+            tile_pos = Vec2(tile['pos'])
             self.offgrid_tiles.append(Tile(tile_type,
                                            tile_variant,
                                            tile_pos))
@@ -105,52 +105,52 @@ class Tilemap:
             if (tile.type in AUTOTILE_TYPES) and (neighbors in AUTOTILE_MAP):
                 tile.variant = AUTOTILE_MAP[neighbors]
 
-    def render(self, surf, offset=(0, 0)):
+    def render(self):
         # Offgrid tiles are often rendered as decorations, therefor we should
         # render them first so that they are applied behind the grid.
         for tile in self.offgrid_tiles:
-            surf.blit(self.game.assets.get_tiles(tile.type, tile.variant),
-                      tile.pos
-                      .sub(offset)
-                      .tuple())
+            self.game.display.blit(
+                self.game.assets.get_tiles(tile.type, tile.variant),
+                tile.pos
+                .sub(self.game.render_scroll)
+                .tuple())
 
         # Optimization to only render tiles that are visible.
-        top_left_tile_x = offset[0] // self.tile_size
-        top_left_tile_y = offset[1] // self.tile_size
+        top_left_tile = self.game.render_scroll.div_f(self.tile_size)
         # Add one to compensate for rounding errors.
-        top_right_tile_x = (offset[0] + surf.get_width()) // self.tile_size + 1
-        top_right_tile_y = (offset[1] + surf.get_height()) // self.tile_size + 1
-        for x in range(top_left_tile_x, top_right_tile_x):
-            for y in range(top_left_tile_y, top_right_tile_y):
+        top_right_tile = (self.game.render_scroll
+                          .add(self.game.display.get_size())
+                          .div_f(self.tile_size)
+                          .add((1, 1)))
+
+        for x in range(top_left_tile.x, top_right_tile.x):
+            for y in range(top_left_tile.y, top_right_tile.y):
                 loc = f'{x};{y}'
                 if loc in self.tilemap:
                     tile = self.tilemap[loc]
-                    surf.blit(
+                    self.game.display.blit(
                         self.game.assets.get_tiles(tile.type, tile.variant),
                         tile.pos
                         .mult(self.tile_size)
-                        .sub(offset)
+                        .sub(self.game.render_scroll)
                         .tuple())
 
     def physics_rects_around(self, pos):
         rects = []
         for tile in self.tiles_around(pos):
             if tile.type in PHYSICS_TILES:
-                rects.append(pygame.Rect(tile.pos.x * self.tile_size,
-                                         tile.pos.y * self.tile_size,
+                rects.append(pygame.Rect(*tile.pos.mult(self.tile_size),
                                          self.tile_size,
                                          self.tile_size))
-        return rects
+        return tuple(rects)
 
     def tiles_around(self, pos):
         tiles = []
         # Using this formula ensures correct index. Otherwise, we may get
         # rounding errors or extra digits.
-        tile_loc = (int(pos.x // self.tile_size),
-                    int(pos.y // self.tile_size))
+        tile_loc = pos.div_f(self.tile_size).int()
         for offset in NEIGHBOR_OFFSETS:
-            check_loc = Vector2((tile_loc[0] + offset[0],
-                                 tile_loc[1] + offset[1])).json()
+            check_loc = tile_loc.add(offset).json()
             if check_loc in self.tilemap:
                 tiles.append(self.tilemap[check_loc])
-        return tiles
+        return tuple(tiles)

@@ -5,7 +5,7 @@ import pygame
 from app import App
 from scripts.assets import AssetTile
 from scripts.tile import Tile
-from scripts.utils import Key, Mouse, Vector2
+from scripts.utils import Key, Mouse, Vec2
 
 
 class Editor(App):
@@ -51,9 +51,9 @@ class Editor(App):
         self.tile_group = 0
         self.tile_type = tuple(AssetTile)[self.tile_group]
         self.tile_variant = 0
-        self.tile_pos = Vector2((0, 0))
+        self.tile_pos = Vec2((0, 0))
 
-        self.mpos = Vector2((0, 0))
+        self.mpos = Vec2((0, 0))
         self.click = False
         self.r_click = False
         self.ongrid = True
@@ -106,10 +106,10 @@ class Editor(App):
         self.render_scroll = self.scroll.int()
 
     def _handle_tilemap(self):
-        self.tilemap.render(self.display, offset=self.render_scroll)
+        self.tilemap.render()
 
     def _handle_positions(self):
-        self.mpos = Vector2(pygame.mouse.get_pos()).div(self.RES_SCALE)
+        self.mpos = Vec2(pygame.mouse.get_pos()).div(self.RES_SCALE)
         self.tile_pos = (self.mpos
                          .add(self.scroll)
                          .div_f(self.tilemap.tile_size)

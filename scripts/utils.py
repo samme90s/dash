@@ -80,7 +80,7 @@ class Direction:
         self.down = not self.down
 
 
-class Vector2:
+class Vec2:
     def __init__(self, pos):
         [self.x, self.y] = pos
 
@@ -100,28 +100,28 @@ class Vector2:
         [self.x, self.y] = pos
 
     def deepcopy(self):
-        return Vector2((self.x, self.y))
+        return Vec2((self.x, self.y))
 
     def mult(self, scalar):
-        return Vector2((self.x * scalar, self.y * scalar))
+        return Vec2((self.x * scalar, self.y * scalar))
 
     def div(self, scalar):
-        return Vector2((self.x / scalar, self.y / scalar))
+        return Vec2((self.x / scalar, self.y / scalar))
 
     def div_f(self, scalar):
-        return Vector2((self.x // scalar, self.y // scalar))
+        return Vec2((self.x // scalar, self.y // scalar))
 
     def sub(self, offset):
-        return Vector2((self.x - offset[0], self.y - offset[1]))
+        return Vec2((self.x - offset[0], self.y - offset[1]))
 
     def add(self, offset):
-        return Vector2((self.x + offset[0], self.y + offset[1]))
+        return Vec2((self.x + offset[0], self.y + offset[1]))
 
     def mod(self, offset):
-        return Vector2((self.x % offset[0], self.y % offset[1]))
+        return Vec2((self.x % offset[0], self.y % offset[1]))
 
     def int(self):
-        return Vector2((int(self.x), int(self.y)))
+        return Vec2((int(self.x), int(self.y)))
 
     def tuple(self):
         return (self.x, self.y)

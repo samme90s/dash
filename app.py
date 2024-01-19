@@ -4,7 +4,7 @@ import pygame
 
 from scripts.assets import Assets
 from scripts.tilemap import Tilemap
-from scripts.utils import Direction, Vector2
+from scripts.utils import Direction, Vec2
 
 
 class App(ABC):
@@ -30,8 +30,8 @@ class App(ABC):
         except FileNotFoundError:
             raise FileNotFoundError
 
-        self.scroll = Vector2((0, 0))
-        self.render_scroll = Vector2((0, 0))
+        self.scroll = Vec2((0, 0))
+        self.render_scroll = Vec2((0, 0))
 
     @abstractmethod
     def run(self):

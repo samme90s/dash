@@ -1,7 +1,7 @@
 import pygame
 
 from scripts.assets import AssetAnim
-from scripts.utils import Direction, Vector2
+from scripts.utils import Direction, Vec2
 
 
 class PhysicsEntity:
@@ -10,12 +10,12 @@ class PhysicsEntity:
         self.asset = None
         self.size = size
         self.pos = pos.deepcopy()
-        self.velocity = Vector2((0, 0))
-        self.acceleration = Vector2((0, 0))
+        self.velocity = Vec2((0, 0))
+        self.acceleration = Vec2((0, 0))
         self.collisions = Direction()
 
         # To account for images with padding.
-        self.anim_offset = (-3, -3)
+        self.anim_offset = Vec2((-3, -3))
         self.flip = False
         self.set_anim(asset)
 
@@ -24,11 +24,12 @@ class PhysicsEntity:
             self.asset = asset
             self.animation = self.game.assets.get_anim(asset).deepcopy()
 
-    def update(self, tilemap, movement=(0, 0)):
-        self.velocity.set(movement)
+    def update(self):
+        self.velocity.set((self.game.direction.right - self.game.direction.left,
+                           self.game.direction.down - self.game.direction.up))
         self.collisions.reset()
         self._handle_animation()
-        self._handle_collisions(tilemap)
+        self._handle_collisions()
         # Gravity must be applied after collisions because collisions are reset.
         self._apply_gravity()
 
@@ -41,12 +42,12 @@ class PhysicsEntity:
         if self.animation:
             self.animation.update()
 
-    def _handle_collisions(self, tilemap):
+    def _handle_collisions(self):
         vector = self.velocity.add(self.acceleration)
         # Usually want to update each axis separately, as below:
         self.pos.x += vector.x
         entity_rect = self.rect()
-        for rect in tilemap.physics_rects_around(self.pos):
+        for rect in self.game.tilemap.physics_rects_around(self.pos):
             # This can be simplified if using FRect (FloatRect) as pos.
             if entity_rect.colliderect(rect):
                 if vector.x > 0:
@@ -59,7 +60,7 @@ class PhysicsEntity:
 
         self.pos.y += vector.y
         entity_rect = self.rect()
-        for rect in tilemap.physics_rects_around(self.pos):
+        for rect in self.game.tilemap.physics_rects_around(self.pos):
             if entity_rect.colliderect(rect):
                 if vector.y > 0:
                     entity_rect.bottom = rect.top
@@ -81,12 +82,13 @@ class PhysicsEntity:
         # This is often updated therefor using a function here is better.
         return pygame.Rect(*self.pos, *self.size)
 
-    def render(self, surf, offset=(0, 0)):
-        surf.blit(pygame.transform.flip(self.animation.img(), self.flip, False),
-                  self.pos
-                  .sub(offset)
-                  .add(self.anim_offset)
-                  .tuple())
+    def render(self):
+        self.game.display.blit(
+            pygame.transform.flip(self.animation.img(), self.flip, False),
+            self.pos
+            .sub(self.game.render_scroll)
+            .add(self.anim_offset)
+            .tuple())
 
 
 class Player(PhysicsEntity):
@@ -94,8 +96,8 @@ class Player(PhysicsEntity):
         super().__init__(game, AssetAnim.PLAYER_IDLE, size, pos)
         self.air_time = 0
 
-    def update(self, tilemap, movement=(0, 0)):
-        super().update(tilemap, movement)
+    def update(self):
+        super().update()
         self.decide_action()
 
     def decide_action(self):

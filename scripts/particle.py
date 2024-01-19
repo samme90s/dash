@@ -1,6 +1,71 @@
+import math
 import random
 
-from scripts.utils import Vector2
+import pygame
+
+from scripts.assets import AssetAnim
+from scripts.utils import Vec2
+
+
+class Particles:
+    def __init__(self,
+                 game,
+                 tile_type,
+                 tile_variant,
+                 tile_keep,
+                 particle_asset,
+                 particle_velocity,
+                 particle_random_frame,
+                 offset=Vec2((0, 0)),
+                 size=Vec2((16, 16)),
+                 spawn_rate=40_960):
+        # The number decides how often something spawns.
+        # >number = less spawns
+        self.SPAWN_RATE = spawn_rate
+        self.game = game
+        self.tile_type = tile_type
+        self.tile_variant = tile_variant
+        self.tile_keep = tile_keep
+        self.particle_asset = particle_asset
+        self.particle_velocity = particle_velocity
+        self.particle_random_frame = particle_random_frame
+        self.offset = offset
+        self.size = size
+        self.spawns = self.__get_spawners()
+        self.particles = []
+
+    def __get_spawners(self):
+        spawns = []
+        for tile in self.game.tilemap.extract(
+                [(self.tile_type, self.tile_variant)],
+                self.tile_keep):
+            spawns.append(pygame.Rect(*tile.pos.add(self.offset), *self.size))
+        return tuple(spawns)
+
+    def update(self):
+        for rect in self.spawns:
+            if random.random() * self.SPAWN_RATE < rect.width * rect.height:
+                self.particles.append(
+                    Particle(self.game,
+                             self.particle_asset,
+                             Vec2((rect.x, rect.y))
+                             .add((random.random() * rect.width,
+                                  random.random() * rect.height)),
+                             self.particle_velocity,
+                             self.particle_random_frame))
+
+    def render(self):
+        for particle in self.particles.copy():
+            kill = particle.update()
+            if particle.asset == AssetAnim.PARTICLE_LEAF:
+                # Makes the leaf float left and right over time.
+                # 0.035 reduces the speed of the sine curve loop.
+                # 0.3 reduces the amplitude of the sine curve.
+                particle.pos.add(
+                    (math.sin(particle.animation.frame * 0.035) * 0.3, 0))
+            particle.render()
+            if kill:
+                self.particles.remove(particle)
 
 
 class Particle:
@@ -8,7 +73,7 @@ class Particle:
         self.game = game
         self.asset = asset
         self.pos = pos.deepcopy()
-        self.velocity = Vector2(velocity)
+        self.velocity = Vec2(velocity)
         self.animation = self.game.assets.get_anim(asset).deepcopy()
         if random_frame:
             # Reduce by one to avoid the last frame being selected.
@@ -28,9 +93,11 @@ class Particle:
 
         return kill
 
-    def render(self, surf, offset=(0, 0)):
+    def render(self):
         img = self.animation.img()
-        surf.blit(img, self.pos
-                  .sub((offset[0] + img.get_width() // 2,
-                        offset[1] + img.get_height() // 2))
-                  .tuple())
+        self.game.display.blit(
+            img,
+            self.pos
+            .sub((self.game.render_scroll.x + img.get_width() // 2,
+                  self.game.render_scroll.y + img.get_height() // 2))
+            .tuple())
