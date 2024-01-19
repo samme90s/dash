@@ -28,8 +28,9 @@ class PhysicsEntity:
         self.velocity.set(movement)
         self.collisions.reset()
         self._handle_animation()
-        self._apply_gravity()
         self._handle_collisions(tilemap)
+        # Gravity must be applied after collisions because collisions are reset.
+        self._apply_gravity()
 
     def _handle_animation(self):
         if self.velocity.x > 0:
@@ -39,14 +40,6 @@ class PhysicsEntity:
 
         if self.animation:
             self.animation.update()
-
-    def _apply_gravity(self):
-        # Apply gravity, with a terminal velocity.
-        # Positive y is down (not like a cartesian plane from math).
-        self.acceleration.y = min(5, self.acceleration.y + 0.1)
-
-        if self.collisions.down or self.collisions.up:
-            self.acceleration.y = 0
 
     def _handle_collisions(self, tilemap):
         vector = self.velocity.add(self.acceleration)
@@ -75,6 +68,14 @@ class PhysicsEntity:
                     entity_rect.top = rect.bottom
                     self.collisions.up = True
                 self.pos.y = entity_rect.y
+
+    def _apply_gravity(self):
+        # Apply gravity, with a terminal velocity.
+        # Positive y is down (not like a cartesian plane from math).
+        self.acceleration.y = min(5, self.acceleration.y + 0.1)
+
+        if self.collisions.down or self.collisions.up:
+            self.acceleration.y = 0
 
     def rect(self):
         # This is often updated therefor using a function here is better.
