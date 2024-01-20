@@ -43,7 +43,7 @@ class Game(App):
                                    tile_type=AssetTile.STONE,
                                    tile_variant=1,
                                    tile_keep=True,
-                                   particle_asset=AssetAnim.PARTICLE_PARTICLE,
+                                   particle_asset=AssetAnim.PARTICLE_DARK,
                                    particle_velocity=Vec2((0, -0.3)),
                                    particle_random_frame=True,
                                    offset=Vec2((0, 0)),
