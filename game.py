@@ -15,7 +15,7 @@ class Game(App):
         super().__init__(title='python',
                          map_path='map.json',
                          res_base=(320, 180),
-                         res_scale=2.0)
+                         res_scale=3.0)
 
         self.binds = (
             Key((pygame.K_a, pygame.K_LEFT),
@@ -29,15 +29,26 @@ class Game(App):
 
         self.clouds = Clouds(self.assets.get_layers(AssetLayer.CLOUD), count=16)
         self.player = Player(self, (8, 15), Vec2((50, 50)))
-        self.leaf_particles = Particles(self,
-                                        AssetTile.LARGE_DECOR,
-                                        2,
-                                        True,
-                                        AssetAnim.PARTICLE_LEAF,
-                                        Vec2((-0.1, 0.3)), True,
-                                        offset=Vec2((4, 4)),
-                                        size=Vec2((23, 13)),
-                                        spawn_rate=40_960)
+        self.leaf_par = Particles(game=self,
+                                  tile_type=AssetTile.LARGE_DECOR,
+                                  tile_variant=2,
+                                  tile_keep=True,
+                                  particle_asset=AssetAnim.PARTICLE_LEAF,
+                                  particle_velocity=Vec2((-0.1, 0.3)),
+                                  particle_random_frame=True,
+                                  offset=Vec2((4, 4)),
+                                  size=Vec2((23, 13)),
+                                  spawn_rate=40_960)
+        self.stone_par = Particles(game=self,
+                                   tile_type=AssetTile.STONE,
+                                   tile_variant=1,
+                                   tile_keep=True,
+                                   particle_asset=AssetAnim.PARTICLE_PARTICLE,
+                                   particle_velocity=Vec2((0, -0.3)),
+                                   particle_random_frame=True,
+                                   offset=Vec2((0, 0)),
+                                   size=Vec2((16, 8)),
+                                   spawn_rate=40_960)
 
     def run(self):
         while True:
@@ -49,6 +60,7 @@ class Game(App):
             self._handle_particles()
             self._handle_player()
             self._handle_events()
+            self.__dev()
             self._render()
 
     def _clear(self):
@@ -76,8 +88,10 @@ class Game(App):
         self.player.render()
 
     def _handle_particles(self):
-        self.leaf_particles.update()
-        self.leaf_particles.render()
+        self.leaf_par.update()
+        self.leaf_par.render(speed=Vec2((0.035, 0)), amp=Vec2((0.3, 0)))
+        self.stone_par.update()
+        self.stone_par.render(speed=Vec2((0.1, 0)), amp=Vec2((0.3, 0)))
 
     def _handle_events(self):
         for event in pygame.event.get():
@@ -91,7 +105,7 @@ class Game(App):
             sys.exit()
 
     def __dev(self):
-        for rect in self.spawns:
+        for rect in self.stone_par.spawns:
             adjusted_rect = pygame.Rect(*Vec2((rect.x, rect.y))
                                         .sub(self.render_scroll),
                                         *rect.size)
