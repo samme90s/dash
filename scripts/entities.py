@@ -11,7 +11,6 @@ class PhysicsEntity:
         self.size = size
         self.pos = pos.deepcopy()
         self.velocity = Vec2((0, 0))
-        self.acceleration = Vec2((0, 0))
         self.collisions = Direction()
 
         # To account for images with padding.
@@ -25,8 +24,7 @@ class PhysicsEntity:
             self.animation = self.game.assets.get_anim(asset).deepcopy()
 
     def update(self):
-        self.velocity.set((self.game.direction.right - self.game.direction.left,
-                           self.game.direction.down - self.game.direction.up))
+        self.velocity.x = self.game.direction.right - self.game.direction.left
         self.collisions.reset()
         self._handle_animation()
         self._handle_collisions()
@@ -43,29 +41,28 @@ class PhysicsEntity:
             self.animation.update()
 
     def _handle_collisions(self):
-        vector = self.velocity.add(self.acceleration)
         # Usually want to update each axis separately, as below:
-        self.pos.x += vector.x
+        self.pos.x += self.velocity.x
         entity_rect = self.rect()
         for rect in self.game.tilemap.physics_rects_around(self.pos):
             # This can be simplified if using FRect (FloatRect) as pos.
             if entity_rect.colliderect(rect):
-                if vector.x > 0:
+                if self.velocity.x > 0:
                     entity_rect.right = rect.left
                     self.collisions.right = True
-                if vector.x < 0:
+                if self.velocity.x < 0:
                     entity_rect.left = rect.right
                     self.collisions.left = True
                 self.pos.x = entity_rect.x
 
-        self.pos.y += vector.y
+        self.pos.y += self.velocity.y
         entity_rect = self.rect()
         for rect in self.game.tilemap.physics_rects_around(self.pos):
             if entity_rect.colliderect(rect):
-                if vector.y > 0:
+                if self.velocity.y > 0:
                     entity_rect.bottom = rect.top
                     self.collisions.down = True
-                if vector.y < 0:
+                if self.velocity.y < 0:
                     entity_rect.top = rect.bottom
                     self.collisions.up = True
                 self.pos.y = entity_rect.y
@@ -73,10 +70,10 @@ class PhysicsEntity:
     def _apply_gravity(self):
         # Apply gravity, with a terminal velocity.
         # Positive y is down (not like a cartesian plane from math).
-        self.acceleration.y = min(5, self.acceleration.y + 0.1)
+        self.velocity.y = min(5, self.velocity.y + 0.1)
 
         if self.collisions.down or self.collisions.up:
-            self.acceleration.y = 0
+            self.velocity.y = 0
 
     def rect(self):
         # This is often updated therefor using a function here is better.
@@ -113,4 +110,4 @@ class Player(PhysicsEntity):
             self.set_anim(AssetAnim.PLAYER_IDLE)
 
     def jump(self):
-        self.acceleration.y = -3
+        self.velocity.y = -3
