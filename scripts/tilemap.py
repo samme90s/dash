@@ -84,8 +84,7 @@ class Tilemap:
             tile = self.tilemap[loc]
             if (tile.type, tile.variant) in id_pairs:
                 matches.append(tile.deepcopy())
-                # Converting to pixels.
-                matches[-1].pos.mult(self.tile_size)
+                matches[-1].pos = matches[-1].pos.mult(self.tile_size)
                 if not keep:
                     del self.tilemap[loc]
 
