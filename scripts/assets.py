@@ -5,6 +5,7 @@ from scripts.utils import Animation, load_images
 
 class AssetAnim(Enum):
     PARTICLE_LEAF = 'particles/leaf'
+    PARTICLE_DARK = 'particles/dark'
     PLAYER_IDLE = 'entities/player/idle'
     PLAYER_JUMP = 'entities/player/jump'
     PLAYER_RUN = 'entities/player/run'
@@ -29,6 +30,10 @@ class Assets:
         self.anims = {
             AssetAnim.PARTICLE_LEAF.value: Animation(
                 load_images(AssetAnim.PARTICLE_LEAF.value),
+                img_dur=20,
+                loop=False),
+            AssetAnim.PARTICLE_DARK.value: Animation(
+                load_images(AssetAnim.PARTICLE_DARK.value),
                 img_dur=20,
                 loop=False),
             AssetAnim.PLAYER_IDLE.value: Animation(
