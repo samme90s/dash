@@ -3,7 +3,6 @@ import random
 
 import pygame
 
-from scripts.assets import AssetAnim
 from scripts.utils import Vec2
 
 
@@ -54,15 +53,14 @@ class Particles:
                              self.particle_velocity,
                              self.particle_random_frame))
 
-    def render(self):
+    def render(self, speed=Vec2((0, 0)), amp=Vec2((0, 0))):
         for particle in self.particles.copy():
             kill = particle.update()
-            if particle.asset == AssetAnim.PARTICLE_LEAF:
-                # Makes the leaf float left and right over time.
-                # 0.035 reduces the speed of the sine curve loop.
-                # 0.3 reduces the amplitude of the sine curve.
-                particle.pos.add(
-                    (math.sin(particle.animation.frame * 0.035) * 0.3, 0))
+            # speed reduces the speed of the sine curve loop.
+            # offset reduces the amplitude of the sine curve.
+            particle.pos = particle.pos.add(
+                (math.sin(particle.animation.frame * speed.x) * amp.x,
+                 math.sin(particle.animation.frame * speed.y) * amp.y))
             particle.render()
             if kill:
                 self.particles.remove(particle)
