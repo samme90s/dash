@@ -34,6 +34,7 @@ class PhysicsEntity:
         self._update_pos_x()
         self._update_pos_y()
         self._apply_gravity()
+        self._norm_vel_x()
 
     def _update_velocity(self):
         self.velocity_f = self.velocity.add(
@@ -84,6 +85,12 @@ class PhysicsEntity:
         if self.collisions.down or self.collisions.up:
             self.velocity.y = 0
 
+    def _norm_vel_x(self):
+        if self.velocity.x > 0:
+            self.velocity.x = max(0, self.velocity.x - 0.1)
+        else:
+            self.velocity.x = min(0, self.velocity.x + 0.1)
+
     def rect(self):
         return pygame.Rect(*self.pos, *self.size)
 
@@ -122,7 +129,6 @@ class Player(PhysicsEntity):
 
         self._handle_dash()
         self._update_anim()
-        self._norm_vel()
 
     def _handle_dash(self):
         if self.dashing > 0:
@@ -162,12 +168,6 @@ class Player(PhysicsEntity):
                 self._set_anim(AssetAnim.PLAYER_RUN)
             else:
                 self._set_anim(AssetAnim.PLAYER_IDLE)
-
-    def _norm_vel(self):
-        if self.velocity.x > 0:
-            self.velocity.x = max(0, self.velocity.x - 0.1)
-        else:
-            self.velocity.x = min(0, self.velocity.x + 0.1)
 
     def jump(self):
         if self.y_slide:
