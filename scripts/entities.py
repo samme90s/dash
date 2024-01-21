@@ -95,7 +95,7 @@ class PhysicsEntity:
         return pygame.Rect(*self.pos, *self.size)
 
     def render(self):
-        self.game.display.blit(
+        self.game.fore_d.blit(
             pygame.transform.flip(self.anim.img(), self.flip, False),
             self.pos
             .sub(self.game.render_scroll)
@@ -174,6 +174,7 @@ class Player(PhysicsEntity):
             self._y_slide()
         elif self.jumps:
             self._bump(Vec2((0, -3)))
+            self.game.shake = max(16, self.game.shake - 1)
 
     def _y_slide(self):
         if self.flip and self.velocity_f.x < 0:

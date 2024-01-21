@@ -108,7 +108,7 @@ class Tilemap:
         # Offgrid tiles are often rendered as decorations, therefor we should
         # render them first so that they are applied behind the grid.
         for tile in self.offgrid_tiles:
-            self.game.display.blit(
+            self.game.fore_d.blit(
                 self.game.assets.get_tiles(tile.type, tile.variant),
                 tile.pos
                 .sub(self.game.render_scroll)
@@ -118,7 +118,7 @@ class Tilemap:
         top_left_tile = self.game.render_scroll.div_f(self.tile_size)
         # Add one to compensate for rounding errors.
         top_right_tile = (self.game.render_scroll
-                          .add(self.game.display.get_size())
+                          .add(self.game.fore_d.get_size())
                           .div_f(self.tile_size)
                           .add((1, 1)))
 
@@ -127,7 +127,7 @@ class Tilemap:
                 loc = f'{x};{y}'
                 if loc in self.tilemap:
                     tile = self.tilemap[loc]
-                    self.game.display.blit(
+                    self.game.fore_d.blit(
                         self.game.assets.get_tiles(tile.type, tile.variant),
                         tile.pos
                         .mult(self.tile_size)

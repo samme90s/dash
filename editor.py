@@ -95,9 +95,6 @@ class Editor(Instance):
             self._handle_events()
             self._render()
 
-    def _clear(self):
-        self.display.fill((0, 0, 0))
-
     def _handle_scroll(self):
         self.scroll = self.scroll.add(((self.direction.right -
                                        self.direction.left) * 5,
@@ -121,15 +118,15 @@ class Editor(Instance):
             self.tile_variant).copy()
         current_tile_img.set_alpha(155)
         if self.ongrid:
-            self.display.blit(current_tile_img,
-                              self.tile_pos
-                              .mult(self.tilemap.tile_size)
-                              .sub(self.scroll)
-                              .tuple())
+            self.fore_d.blit(current_tile_img,
+                             self.tile_pos
+                             .mult(self.tilemap.tile_size)
+                             .sub(self.scroll)
+                             .tuple())
         else:
-            self.display.blit(current_tile_img, self.mpos.tuple())
+            self.fore_d.blit(current_tile_img, self.mpos.tuple())
 
-        self.display.blit(current_tile_img, (5, 5))
+        self.fore_d.blit(current_tile_img, (5, 5))
 
     def _handle_tile_placement(self):
         if self.click and self.ongrid:

@@ -59,7 +59,7 @@ class Particle:
 
     def render(self):
         img = self.anim.img()
-        self.game.display.blit(
+        self.game.fore_d.blit(
             img,
             self.pos
             .sub((self.game.render_scroll.x + img.get_width() // 2,

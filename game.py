@@ -75,22 +75,18 @@ class Game(Instance):
             self._handle_events()
             self._render()
 
-    def _clear(self):
-        self.display.blit(self.assets.get_layers(AssetLayer.BACKGROUND, 0),
-                          (0, 0))
-
     def _handle_scroll(self):
         self.scroll = self.scroll.add(((self.player.rect().centerx
-                                       - self.display.get_width() / 2
+                                       - self.fore_d.get_width() / 2
                                        - self.scroll.x) / 30,
                                        (self.player.rect().centery
-                                       - self.display.get_height() / 2
+                                       - self.fore_d.get_height() / 2
                                        - self.scroll.y) / 30))
         self.render_scroll = self.scroll.int()
 
     def _handle_clouds(self):
         self.clouds.update()
-        self.clouds.render(self.display, offset=self.render_scroll)
+        self.clouds.render(self.back_d, offset=self.render_scroll)
 
     def _handle_tilemap(self):
         self.tilemap.render()
