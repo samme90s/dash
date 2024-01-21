@@ -2,13 +2,13 @@ import sys
 
 import pygame
 
-from app import App
+from instance import Instance
 from scripts.assets import AssetTile
 from scripts.tile import Tile
 from scripts.utils import Key, Mouse, Vec2
 
 
-class Editor(App):
+class Editor(Instance):
     def __init__(self):
         super().__init__(title='editor',
                          map_path='map.json',
