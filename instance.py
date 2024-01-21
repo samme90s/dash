@@ -7,7 +7,7 @@ from scripts.tilemap import Tilemap
 from scripts.utils import Direction, Vec2
 
 
-class App(ABC):
+class Instance(ABC):
     def __init__(self, title: str,
                  map_path: str,
                  res_base: tuple = (320, 180),
