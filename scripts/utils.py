@@ -29,16 +29,12 @@ def load_images(path):
     # consistent across all platforms.
     for img_name in sorted(os.listdir(BASE_IMG_PATH + path)):
         images.append(load_image(path + '/' + img_name))
-    return images
+    return tuple(images)
 
 
 class Anim:
     def __init__(self, images, img_dur=5, loop=True):
-        if images is None or not len(images):
-            raise ValueError('images must not be empty')
-        if img_dur <= 0:
-            raise ValueError('img_dur must be greater than 0')
-        self.images = images.copy()
+        self.images = images
         self.img_dur = img_dur
         self.loop = loop
         self.done = False
@@ -103,38 +99,42 @@ class Vec2:
         else:
             raise IndexError()
 
-    def set(self, pos=(0, 0)):
-        [self.x, self.y] = pos
-
     def deepcopy(self):
         return Vec2((self.x, self.y))
 
     def mult(self, scalar):
-        return Vec2((self.x * scalar, self.y * scalar))
+        return Vec2((self.x * scalar,
+                     self.y * scalar))
 
     def div(self, scalar):
-        return Vec2((self.x / scalar, self.y / scalar))
+        return Vec2((self.x / scalar,
+                     self.y / scalar))
 
     def div_f(self, scalar):
-        return Vec2((self.x // scalar, self.y // scalar))
+        return Vec2((self.x // scalar,
+                     self.y // scalar))
 
     def sub(self, offset):
-        return Vec2((self.x - offset[0], self.y - offset[1]))
+        return Vec2((self.x - offset[0],
+                     self.y - offset[1]))
 
     def add(self, offset):
-        return Vec2((self.x + offset[0], self.y + offset[1]))
+        return Vec2((self.x + offset[0],
+                     self.y + offset[1]))
 
     def mod(self, offset):
-        return Vec2((self.x % offset[0], self.y % offset[1]))
+        return Vec2((self.x % offset[0],
+                     self.y % offset[1]))
 
     def int(self):
-        return Vec2((int(self.x), int(self.y)))
+        return Vec2((int(self.x),
+                     int(self.y)))
 
     def tuple(self):
         return (self.x, self.y)
 
     def json(self):
-        return str(self.x) + ';' + str(self.y)
+        return f'{self.x};{self.y}'
 
 
 class Event(ABC):

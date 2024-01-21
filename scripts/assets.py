@@ -72,7 +72,7 @@ class Assets:
     def get_layers(self, type: AssetLayer, variant=-1):
         if (variant < 0):
             return self.layers[type.value]
-        elif variant >= 0 and isinstance(self.layers[type.value], list):
+        elif variant >= 0 and isinstance(self.layers[type.value], tuple):
             return self.layers[type.value][variant]
 
         raise FileNotFoundError()
@@ -80,7 +80,7 @@ class Assets:
     def get_tiles(self, type: AssetTile, variant=-1):
         if variant < 0:
             return self.tiles[type.value]
-        elif variant >= 0 and isinstance(self.tiles[type.value], list):
+        elif variant >= 0 and isinstance(self.tiles[type.value], tuple):
             return self.tiles[type.value][variant]
 
         raise FileNotFoundError()
