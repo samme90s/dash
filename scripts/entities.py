@@ -1,6 +1,7 @@
 import pygame
 
 from scripts.assets import AssetAnim
+from scripts.particle import Particle, get_parts_burst
 from scripts.utils import Direction, Vec2
 
 
@@ -22,14 +23,14 @@ class PhysicsEntity:
     def _set_anim(self, asset):
         if asset != self.asset:
             self.asset = asset
-            self.animation = self.game.assets.get_anim(asset).deepcopy()
+            self.Anim = self.game.assets.get_anim(asset).deepcopy()
 
     def update(self):
         self.collisions.reset()
         self._update_velocity()
         self._handle_flip()
         self._handle_anim()
-        # Usually want to update each axis separately, as below:
+        # Update each axis independently.
         self._update_pos_x()
         self._update_pos_y()
         self._apply_gravity()
@@ -46,8 +47,8 @@ class PhysicsEntity:
             self.flip = True
 
     def _handle_anim(self):
-        if self.animation:
-            self.animation.update()
+        if self.Anim:
+            self.Anim.update()
 
     def _update_pos_x(self):
         self.pos.x += self.velocity_f.x
@@ -84,12 +85,11 @@ class PhysicsEntity:
             self.velocity.y = 0
 
     def rect(self):
-        # This is often updated therefor using a function here is better.
         return pygame.Rect(*self.pos, *self.size)
 
     def render(self):
         self.game.display.blit(
-            pygame.transform.flip(self.animation.img(), self.flip, False),
+            pygame.transform.flip(self.Anim.img(), self.flip, False),
             self.pos
             .sub(self.game.render_scroll)
             .add(self.anim_offset)
@@ -104,6 +104,10 @@ class Player(PhysicsEntity):
         self.jumps = self.jumps_max
         self.y_slide = False
 
+        self.dashing = 0
+        self.dashing_dur = 12
+        self.dashing_max = 60
+
     def update(self):
         super().update()
         if self.collisions.down:
@@ -114,15 +118,46 @@ class Player(PhysicsEntity):
         if (self.collisions.right or self.collisions.left) and self.in_air:
             self.y_slide = True
             self.velocity.y = min(0.5, self.velocity.y)
-            self._set_anim(AssetAnim.PLAYER_WALL_SLIDE)
+            self._set_anim(AssetAnim.PLAYER_Y_SLIDE)
 
+        self._handle_dash()
         self._update_anim()
         self._norm_vel()
+
+    def _handle_dash(self):
+        if self.dashing > 0:
+            if self.dashing in {self.dashing_max,
+                                self.dashing_max - self.dashing_dur}:
+                for part in get_parts_burst(game=self.game,
+                                            amount=20,
+                                            asset=AssetAnim.PARTICLE_DARK,
+                                            pos=Vec2(self.rect().center),
+                                            rand_f=True):
+                    self.game.parts.append(part)
+
+            self.dashing = max(0, self.dashing - 1)
+
+        if self.dashing > self.dashing_max - self.dashing_dur:
+            if self.flip:
+                self.velocity.x = -8
+            else:
+                self.velocity.x = 8
+            if self.dashing == (self.dashing_max - self.dashing_dur) + 1:
+                self.velocity.x *= 0.1
+
+            self.game.parts.append(
+                Particle(game=self.game,
+                         asset=AssetAnim.PARTICLE_DARK,
+                         pos=Vec2(self.rect().center),
+                         vel=self.velocity.div(4),
+                         rand_f=True))
 
     def _update_anim(self):
         if not self.y_slide:
             if self.in_air:
                 self._set_anim(AssetAnim.PLAYER_JUMP)
+            elif self.dashing > self.dashing_max - self.dashing_dur:
+                self._set_anim(AssetAnim.PLAYER_SLIDE)
             elif self.velocity_f.x != 0:
                 self._set_anim(AssetAnim.PLAYER_RUN)
             else:
@@ -151,3 +186,7 @@ class Player(PhysicsEntity):
         self.jumps = max(0, self.jumps - 1)
         self.velocity.x = vec.x
         self.velocity.y = vec.y
+
+    def dash(self):
+        if not self.dashing:
+            self.dashing = self.dashing_max

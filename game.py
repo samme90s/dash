@@ -6,8 +6,8 @@ from app import App
 from scripts.assets import AssetAnim, AssetLayer, AssetTile
 from scripts.clouds import Clouds
 from scripts.entities import Player
-from scripts.particle import Particles
-from scripts.utils import Key, Vec2
+from scripts.particle import Spawner
+from scripts.utils import Key, Vec2, get_rects
 
 
 class Game(App):
@@ -25,30 +25,38 @@ class Game(App):
                 lambda: self.direction.toggle_right(),
                 lambda: self.direction.toggle_right()),
             Key((pygame.K_SPACE, pygame.K_UP),
-                lambda: self.player.jump()))
+                lambda: self.player.jump()),
+            Key(pygame.K_LSHIFT,
+                lambda: self.player.dash()))
 
         self.clouds = Clouds(self.assets.get_layers(AssetLayer.CLOUD), count=16)
         self.player = Player(self, (8, 15), Vec2((50, 50)))
-        self.leaf_par = Particles(game=self,
-                                  tile_type=AssetTile.LARGE_DECOR,
-                                  tile_variant=2,
-                                  tile_keep=True,
-                                  particle_asset=AssetAnim.PARTICLE_LEAF,
-                                  particle_velocity=Vec2((-0.1, 0.3)),
-                                  particle_random_frame=True,
-                                  offset=Vec2((4, 4)),
-                                  size=Vec2((23, 13)),
-                                  spawn_rate=40_960)
-        self.stone_par = Particles(game=self,
-                                   tile_type=AssetTile.STONE,
-                                   tile_variant=1,
-                                   tile_keep=True,
-                                   particle_asset=AssetAnim.PARTICLE_DARK,
-                                   particle_velocity=Vec2((0, -0.3)),
-                                   particle_random_frame=True,
-                                   offset=Vec2((0, 0)),
-                                   size=Vec2((16, 8)),
-                                   spawn_rate=40_960)
+        self.parts = []
+        tree_rects = get_rects(game=self,
+                               type=AssetTile.LARGE_DECOR,
+                               var=2,
+                               keep=True,
+                               size=Vec2((23, 13)),
+                               offset=Vec2((4, 4)))
+        self.leaf_spawner = Spawner(game=self,
+                                    asset=AssetAnim.PARTICLE_LEAF,
+                                    vel=Vec2((-0.1, 0.3)),
+                                    rand_f=True,
+                                    rects=tree_rects,
+                                    spawn_r=0.02)
+
+        stone_rects = get_rects(game=self,
+                                type=AssetTile.STONE,
+                                var=1,
+                                keep=True,
+                                size=Vec2((16, 8)),
+                                offset=Vec2((0, 0)))
+        self.dark_spawner = Spawner(game=self,
+                                    asset=AssetAnim.PARTICLE_DARK,
+                                    vel=Vec2((0, -0.3)),
+                                    rand_f=True,
+                                    rects=stone_rects,
+                                    spawn_r=0.002)
 
     def run(self):
         while True:
@@ -60,7 +68,6 @@ class Game(App):
             self._handle_particles()
             self._handle_player()
             self._handle_events()
-            self.__dev()
             self._render()
 
     def _clear(self):
@@ -88,10 +95,17 @@ class Game(App):
         self.player.render()
 
     def _handle_particles(self):
-        self.leaf_par.update()
-        self.leaf_par.render(speed=Vec2((0.035, 0)), amp=Vec2((0.3, 0)))
-        self.stone_par.update()
-        self.stone_par.render(speed=Vec2((0.1, 0)), amp=Vec2((0.3, 0)))
+        self.leaf_spawner.spawn()
+        self.dark_spawner.spawn()
+        for part in self.parts.copy():
+            if part.asset == AssetAnim.PARTICLE_LEAF:
+                part.sin_offset(speed=Vec2((0.035, 0)), amp=Vec2((0.3, 0)))
+            if part.asset == AssetAnim.PARTICLE_DARK:
+                part.sin_offset(speed=Vec2((0.1, 0)), amp=Vec2((0.3, 0)))
+            if part.update():
+                self.parts.remove(part)
+            else:
+                part.render()
 
     def _handle_events(self):
         for event in pygame.event.get():
@@ -103,13 +117,6 @@ class Game(App):
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-
-    def __dev(self):
-        for rect in self.stone_par.spawns:
-            adjusted_rect = pygame.Rect(*Vec2((rect.x, rect.y))
-                                        .sub(self.render_scroll),
-                                        *rect.size)
-            pygame.draw.rect(self.display, (255, 0, 0), adjusted_rect, 1)
 
 
 Game().run()

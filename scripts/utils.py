@@ -6,6 +6,13 @@ import pygame
 BASE_IMG_PATH = 'data/images/'
 
 
+def get_rects(game, type, var, keep, size=(0, 0), offset=(0, 0)):
+    spawns = []
+    for tile in game.tilemap.extract([(type, var)], keep):
+        spawns.append(pygame.Rect(*tile.pos.add(offset), *size))
+    return tuple(spawns)
+
+
 def load_image(path):
     # Using .convert() converts the internal representation of the image to
     # make it more efficient for rendering.
@@ -25,21 +32,21 @@ def load_images(path):
     return images
 
 
-class Animation:
+class Anim:
     def __init__(self, images, img_dur=5, loop=True):
         if images is None or not len(images):
             raise ValueError('images must not be empty')
         if img_dur <= 0:
             raise ValueError('img_dur must be greater than 0')
         self.images = images.copy()
-        self.img_duration = img_dur
+        self.img_dur = img_dur
         self.loop = loop
         self.done = False
         self.frame = 0
         self.frame_max = img_dur * len(images) - 1
 
     def deepcopy(self):
-        return Animation(self.images, self.img_duration, self.loop)
+        return Anim(self.images, self.img_dur, self.loop)
 
     def update(self):
         if self.loop:
@@ -51,7 +58,7 @@ class Animation:
                 self.done = True
 
     def img(self):
-        return self.images[int(self.frame / self.img_duration)]
+        return self.images[int(self.frame / self.img_dur)]
 
 
 class Direction:

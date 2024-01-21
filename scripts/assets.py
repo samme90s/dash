@@ -1,6 +1,6 @@
 from enum import Enum
 
-from scripts.utils import Animation, load_images
+from scripts.utils import Anim, load_images
 
 
 class AssetAnim(Enum):
@@ -10,7 +10,7 @@ class AssetAnim(Enum):
     PLAYER_JUMP = 'entities/player/jump'
     PLAYER_RUN = 'entities/player/run'
     PLAYER_SLIDE = 'entities/player/slide'
-    PLAYER_WALL_SLIDE = 'entities/player/wall_slide'
+    PLAYER_Y_SLIDE = 'entities/player/wall_slide'
 
 
 class AssetLayer(Enum):
@@ -28,26 +28,26 @@ class AssetTile(Enum):
 class Assets:
     def __init__(self):
         self.anims = {
-            AssetAnim.PARTICLE_LEAF.value: Animation(
+            AssetAnim.PARTICLE_LEAF.value: Anim(
                 load_images(AssetAnim.PARTICLE_LEAF.value),
                 img_dur=20,
                 loop=False),
-            AssetAnim.PARTICLE_DARK.value: Animation(
+            AssetAnim.PARTICLE_DARK.value: Anim(
                 load_images(AssetAnim.PARTICLE_DARK.value),
                 img_dur=20,
                 loop=False),
-            AssetAnim.PLAYER_IDLE.value: Animation(
+            AssetAnim.PLAYER_IDLE.value: Anim(
                 load_images(AssetAnim.PLAYER_IDLE.value),
                 img_dur=6),
-            AssetAnim.PLAYER_JUMP.value: Animation(
+            AssetAnim.PLAYER_JUMP.value: Anim(
                 load_images(AssetAnim.PLAYER_JUMP.value)),
-            AssetAnim.PLAYER_RUN.value: Animation(
+            AssetAnim.PLAYER_RUN.value: Anim(
                 load_images(AssetAnim.PLAYER_RUN.value),
                 img_dur=4),
-            AssetAnim.PLAYER_SLIDE.value: Animation(
+            AssetAnim.PLAYER_SLIDE.value: Anim(
                 load_images(AssetAnim.PLAYER_SLIDE.value)),
-            AssetAnim.PLAYER_WALL_SLIDE.value: Animation(
-                load_images(AssetAnim.PLAYER_WALL_SLIDE.value))
+            AssetAnim.PLAYER_Y_SLIDE.value: Anim(
+                load_images(AssetAnim.PLAYER_Y_SLIDE.value))
         }
         self.layers = {
             AssetLayer.BACKGROUND.value: load_images(
