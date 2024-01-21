@@ -23,7 +23,7 @@ class PhysicsEntity:
     def _set_anim(self, asset):
         if asset != self.asset:
             self.asset = asset
-            self.Anim = self.game.assets.get_anim(asset).deepcopy()
+            self.anim = self.game.assets.get_anim(asset).deepcopy()
 
     def update(self):
         self.collisions.reset()
@@ -47,8 +47,8 @@ class PhysicsEntity:
             self.flip = True
 
     def _handle_anim(self):
-        if self.Anim:
-            self.Anim.update()
+        if self.anim:
+            self.anim.update()
 
     def _update_pos_x(self):
         self.pos.x += self.velocity_f.x
@@ -89,7 +89,7 @@ class PhysicsEntity:
 
     def render(self):
         self.game.display.blit(
-            pygame.transform.flip(self.Anim.img(), self.flip, False),
+            pygame.transform.flip(self.anim.img(), self.flip, False),
             self.pos
             .sub(self.game.render_scroll)
             .add(self.anim_offset)
