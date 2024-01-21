@@ -10,7 +10,7 @@ class AssetAnim(Enum):
     PLAYER_JUMP = 'entities/player/jump'
     PLAYER_RUN = 'entities/player/run'
     PLAYER_SLIDE = 'entities/player/slide'
-    PLAYER_Y_SLIDE = 'entities/player/wall_slide'
+    PLAYER_Y_SLIDE = 'entities/player/y_slide'
 
 
 class AssetLayer(Enum):
