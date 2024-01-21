@@ -57,8 +57,6 @@ class Particle:
         self.pos = self.pos.add(self.vel)
         self.anim.update()
 
-        return self.anim.done
-
     def render(self):
         img = self.anim.img()
         self.game.display.blit(

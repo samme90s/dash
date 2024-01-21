@@ -102,14 +102,17 @@ class Game(Instance):
     def _handle_particles(self):
         self.leaf_spawner.update()
         self.dark_spawner.update()
+        # Could always separate entity and tile particles by creating two
+        # separate lists.
         for part in self.parts.copy():
             if part.asset == AssetAnim.PARTICLE_LEAF:
                 part.sin_offset(speed=Vec2((0.035, 0)), amp=Vec2((0.3, 0)))
             if part.asset == AssetAnim.PARTICLE_DARK:
                 part.sin_offset(speed=Vec2((0.1, 0)), amp=Vec2((0.3, 0)))
-            if part.update():
+            if part.anim.done:
                 self.parts.remove(part)
             else:
+                part.update()
                 part.render()
 
     def _handle_events(self):
