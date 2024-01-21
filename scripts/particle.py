@@ -15,7 +15,7 @@ def get_parts_burst(game, amount, asset, pos, rand_f):
     return tuple(parts)
 
 
-class Spawner:
+class ParticleSpawner:
     def __init__(self, game, asset, vel, rand_f, rects, spawn_r=0.01):
         self.game = game
         self.asset = asset
@@ -24,7 +24,7 @@ class Spawner:
         self.rects = rects
         self.spawn_r = spawn_r
 
-    def spawn(self):
+    def update(self):
         for rect in self.rects:
             if (random.random() * 1) < self.spawn_r:
                 pos = Vec2((rect.x + random.random() * rect.width,
