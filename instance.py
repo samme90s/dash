@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 import pygame
 
-from scripts.assets import AssetLayer, Assets
+from scripts.assets import Assets
 from scripts.tilemap import Tilemap
 from scripts.utils import Dir, Vec2
 
@@ -45,8 +45,7 @@ class Instance(ABC):
 
     def _clear(self):
         self.fore_d.fill((0, 0, 0, 0))
-        self.back_d.blit(self.assets.get_layers(AssetLayer.BACKGROUND, 0),
-                         (0, 0))
+        self.back_d.fill((0, 0, 0))
 
     def _render(self):
         display_mask = pygame.mask.from_surface(self.fore_d)
