@@ -56,33 +56,33 @@ class Tilemap:
 
         for tile in map_data['tilemap'].values():
             tile_type = AssetTile[tile['type']]
-            tile_variant = tile['variant']
+            tile_var = tile['var']
             tile_pos = Vec2(tile['pos'])
             self.tilemap[tile_pos.json()] = Tile(tile_type,
-                                                 tile_variant,
+                                                 tile_var,
                                                  tile_pos)
 
         self.tile_size = map_data['tile_size']
 
         for tile in map_data['offgrid_tiles']:
             tile_type = AssetTile[tile['type']]
-            tile_variant = tile['variant']
+            tile_var = tile['var']
             tile_pos = Vec2(tile['pos'])
             self.offgrid_tiles.append(Tile(tile_type,
-                                           tile_variant,
+                                           tile_var,
                                            tile_pos))
 
     def extract(self, id_pairs, keep=False):
         matches = []
         for tile in self.offgrid_tiles.copy():
-            if (tile.type, tile.variant) in id_pairs:
+            if (tile.type, tile.var) in id_pairs:
                 matches.append(tile.deepcopy())
                 if not keep:
                     self.offgrid_tiles.remove(tile)
 
         for loc in self.tilemap:
             tile = self.tilemap[loc]
-            if (tile.type, tile.variant) in id_pairs:
+            if (tile.type, tile.var) in id_pairs:
                 matches.append(tile.deepcopy())
                 matches[-1].pos = matches[-1].pos.mult(self.tile_size)
                 if not keep:
@@ -102,14 +102,14 @@ class Tilemap:
 
             neighbors = tuple(sorted(neighbors))
             if (tile.type in AUTOTILE_TYPES) and (neighbors in AUTOTILE_MAP):
-                tile.variant = AUTOTILE_MAP[neighbors]
+                tile.var = AUTOTILE_MAP[neighbors]
 
     def render(self):
         # Offgrid tiles are often rendered as decorations, therefor we should
         # render them first so that they are applied behind the grid.
         for tile in self.offgrid_tiles:
             self.game.fore_d.blit(
-                self.game.assets.get_tiles(tile.type, tile.variant),
+                self.game.assets.get_tiles(tile.type, tile.var),
                 tile.pos
                 .sub(self.game.render_scroll)
                 .tuple())
@@ -128,7 +128,7 @@ class Tilemap:
                 if loc in self.tilemap:
                     tile = self.tilemap[loc]
                     self.game.fore_d.blit(
-                        self.game.assets.get_tiles(tile.type, tile.variant),
+                        self.game.assets.get_tiles(tile.type, tile.var),
                         tile.pos
                         .mult(self.tile_size)
                         .sub(self.game.render_scroll)
