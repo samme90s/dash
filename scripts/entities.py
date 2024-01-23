@@ -103,6 +103,11 @@ class PhysicsEntity:
             .tuple())
 
 
+class Enemy(PhysicsEntity):
+    def __init__(self, game, size, pos):
+        super().__init__(game, AssetAnim.ENEMY_IDLE, size, pos)
+
+
 class Player(PhysicsEntity):
     def __init__(self, game, size, pos):
         super().__init__(game, AssetAnim.PLAYER_IDLE, size, pos)
@@ -149,7 +154,7 @@ class Player(PhysicsEntity):
             else:
                 self.vel.x = 8
             if self.dashing == (self.dashing_max - self.dashing_dur) + 1:
-                self.vel.x *= 0.1
+                self.vel.x *= 0.4
 
             self.game.parts.append(
                 Particle(game=self.game,
