@@ -63,6 +63,14 @@ class Game(Instance):
             spawn_r=0.002)
         self.parts = []
 
+        for spawn in self.tilemap.extract(
+            [(AssetTile.SPAWNERS, 0),
+             (AssetTile.SPAWNERS, 1)]):
+            if spawn.var == 0:
+                self.player.pos = spawn.pos
+            else:
+                print(spawn.pos, 'enemy')
+
     def run(self):
         while True:
             # Order is important here!
@@ -74,6 +82,11 @@ class Game(Instance):
             self._handle_player()
             self._handle_events()
             self._render()
+
+    def _clear(self):
+        super()._clear()
+        self.back_d.blit(
+            self.assets.get_layers(AssetLayer.BACKGROUND, 0), (0, 0))
 
     def _handle_scroll(self):
         self.scroll = self.scroll.add(((self.player.rect().centerx
