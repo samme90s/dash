@@ -44,13 +44,13 @@ class Editor(Instance):
                   lambda: self._toggle_r_click(),
                   lambda: self._toggle_r_click()),
             Mouse(4,
-                  lambda: self._scroll_tile_variant(1)),
+                  lambda: self._scroll_tile_var(1)),
             Mouse(5,
-                  lambda: self._scroll_tile_variant(-1)))
+                  lambda: self._scroll_tile_var(-1)))
 
         self.tile_group = 0
         self.tile_type = tuple(AssetTile)[self.tile_group]
-        self.tile_variant = 0
+        self.tile_var = 0
         self.tile_pos = Vec2((0, 0))
 
         self.mpos = Vec2((0, 0))
@@ -61,10 +61,10 @@ class Editor(Instance):
     def _toggle_click(self):
         self.click = not self.click
         # This prevents accidental placement of multiple instances.
-        if bool and not self.ongrid:
+        if self.click and not self.ongrid:
             self.tilemap.offgrid_tiles.append(
                 Tile(self.tile_type,
-                     self.tile_variant,
+                     self.tile_var,
                      self.mpos.add(self.scroll)))
 
     def _toggle_r_click(self):
@@ -76,11 +76,11 @@ class Editor(Instance):
     def _scroll_tile_type(self, amount):
         self.tile_group = (self.tile_group + amount) % len(AssetTile)
         self.tile_type = tuple(AssetTile)[self.tile_group]
-        self.tile_variant = 0
+        self.tile_var = 0
 
-    def _scroll_tile_variant(self, amount):
-        self.tile_variant = ((self.tile_variant + amount) %
-                             len(self.assets.get_tiles(self.tile_type)))
+    def _scroll_tile_var(self, amount):
+        self.tile_var = ((self.tile_var + amount) %
+                         len(self.assets.get_tiles(self.tile_type)))
 
     def run(self):
         while True:
@@ -115,7 +115,7 @@ class Editor(Instance):
     def _handle_tile_preview(self):
         current_tile_img = self.assets.get_tiles(
             self.tile_type,
-            self.tile_variant).copy()
+            self.tile_var).copy()
         current_tile_img.set_alpha(155)
         if self.ongrid:
             self.fore_d.blit(current_tile_img,
@@ -132,7 +132,7 @@ class Editor(Instance):
         if self.click and self.ongrid:
             self.tilemap.tilemap[self.tile_pos.json()] = Tile(
                 self.tile_type,
-                self.tile_variant,
+                self.tile_var,
                 self.tile_pos)
 
     def _handle_tile_removal(self):
@@ -141,7 +141,7 @@ class Editor(Instance):
             if tile_loc in self.tilemap.tilemap:
                 del self.tilemap.tilemap[tile_loc]
             for tile in self.tilemap.offgrid_tiles.copy():
-                tile_img = self.assets.get_tiles(tile.type, tile.variant)
+                tile_img = self.assets.get_tiles(tile.type, tile.var)
                 tile_r = pygame.Rect(*tile.pos.sub(self.scroll),
                                      *tile_img.get_size())
                 if tile_r.collidepoint(self.mpos.tuple()):
