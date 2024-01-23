@@ -2,7 +2,7 @@ import pygame
 
 from scripts.assets import AssetAnim
 from scripts.particle import Particle, get_parts_burst
-from scripts.utils import Direction, Vec2
+from scripts.utils import Dir, Vec2
 
 
 class PhysicsEntity:
@@ -11,9 +11,9 @@ class PhysicsEntity:
         self.asset = None
         self.size = size
         self.pos = pos.deepcopy()
-        self.velocity = Vec2((0, 0))
-        self.velocity_f = self.velocity.deepcopy()
-        self.collisions = Direction()
+        self.vel = Vec2((0, 0))
+        self.vel_f = self.vel.deepcopy()
+        self.collisions = Dir()
 
         # To account for images with padding.
         self.anim_offset = Vec2((-3, -3))
@@ -25,9 +25,9 @@ class PhysicsEntity:
             self.asset = asset
             self.anim = self.game.assets.get_anim(asset).deepcopy()
 
-    def update(self):
+    def update(self, dir):
         self.collisions.reset()
-        self._update_velocity()
+        self._update_vel_f(dir)
         self._handle_flip()
         self._handle_anim()
         # Update each axis independently.
@@ -36,15 +36,15 @@ class PhysicsEntity:
         self._apply_gravity()
         self._norm_vel_x()
 
-    def _update_velocity(self):
-        self.velocity_f = self.velocity.add(
-            (self.game.direction.right - self.game.direction.left,
-             self.game.direction.down - self.game.direction.up))
+    def _update_vel_f(self, dir):
+        self.vel_f = self.vel.add(
+            (dir.right - dir.left,
+             dir.down - dir.up))
 
     def _handle_flip(self):
-        if self.velocity_f.x > 0:
+        if self.vel_f.x > 0:
             self.flip = False
-        if self.velocity_f.x < 0:
+        if self.vel_f.x < 0:
             self.flip = True
 
     def _handle_anim(self):
@@ -52,44 +52,44 @@ class PhysicsEntity:
             self.anim.update()
 
     def _update_pos_x(self):
-        self.pos.x += self.velocity_f.x
+        self.pos.x += self.vel_f.x
         entity_rect = self.rect()
         for rect in self.game.tilemap.physics_rects_around(self.pos):
             if entity_rect.colliderect(rect):
-                if self.velocity_f.x > 0:
+                if self.vel_f.x > 0:
                     entity_rect.right = rect.left
                     self.collisions.right = True
-                if self.velocity_f.x < 0:
+                if self.vel_f.x < 0:
                     entity_rect.left = rect.right
                     self.collisions.left = True
                 self.pos.x = entity_rect.x
 
     def _update_pos_y(self):
-        self.pos.y += self.velocity_f.y
+        self.pos.y += self.vel_f.y
         entity_rect = self.rect()
         for rect in self.game.tilemap.physics_rects_around(self.pos):
             if entity_rect.colliderect(rect):
-                if self.velocity_f.y > 0:
+                if self.vel_f.y > 0:
                     entity_rect.bottom = rect.top
                     self.collisions.down = True
-                if self.velocity_f.y < 0:
+                if self.vel_f.y < 0:
                     entity_rect.top = rect.bottom
                     self.collisions.up = True
                 self.pos.y = entity_rect.y
 
     def _apply_gravity(self):
-        # Apply gravity, with a terminal velocity.
+        # Apply gravity, with a terminal vel.
         # Positive y is down (not like a cartesian plane from math).
-        self.velocity.y = min(5, self.velocity.y + 0.1)
+        self.vel.y = min(5, self.vel.y + 0.1)
 
         if self.collisions.down or self.collisions.up:
-            self.velocity.y = 0
+            self.vel.y = 0
 
     def _norm_vel_x(self):
-        if self.velocity.x > 0:
-            self.velocity.x = max(0, self.velocity.x - 0.1)
+        if self.vel.x > 0:
+            self.vel.x = max(0, self.vel.x - 0.1)
         else:
-            self.velocity.x = min(0, self.velocity.x + 0.1)
+            self.vel.x = min(0, self.vel.x + 0.1)
 
     def rect(self):
         return pygame.Rect(*self.pos, *self.size)
@@ -115,8 +115,8 @@ class Player(PhysicsEntity):
         self.dashing_dur = 12
         self.dashing_max = 60
 
-    def update(self):
-        super().update()
+    def update(self, dir):
+        super().update(dir)
         if self.collisions.down:
             self.in_air = False
             self.jumps = self.jumps_max
@@ -124,7 +124,7 @@ class Player(PhysicsEntity):
         self.y_slide = False
         if (self.collisions.right or self.collisions.left) and self.in_air:
             self.y_slide = True
-            self.velocity.y = min(0.5, self.velocity.y)
+            self.vel.y = min(0.5, self.vel.y)
             self._set_anim(AssetAnim.PLAYER_Y_SLIDE)
 
         self._handle_dash()
@@ -145,17 +145,17 @@ class Player(PhysicsEntity):
 
         if self.dashing > self.dashing_max - self.dashing_dur:
             if self.flip:
-                self.velocity.x = -8
+                self.vel.x = -8
             else:
-                self.velocity.x = 8
+                self.vel.x = 8
             if self.dashing == (self.dashing_max - self.dashing_dur) + 1:
-                self.velocity.x *= 0.1
+                self.vel.x *= 0.1
 
             self.game.parts.append(
                 Particle(game=self.game,
                          asset=AssetAnim.PARTICLE_DARK,
                          pos=Vec2(self.rect().center),
-                         vel=self.velocity.div(4),
+                         vel=self.vel.div(4),
                          rand_f=True))
 
     def _update_anim(self):
@@ -164,7 +164,7 @@ class Player(PhysicsEntity):
                 self._set_anim(AssetAnim.PLAYER_JUMP)
             elif self.dashing > self.dashing_max - self.dashing_dur:
                 self._set_anim(AssetAnim.PLAYER_SLIDE)
-            elif self.velocity_f.x != 0:
+            elif self.vel_f.x != 0:
                 self._set_anim(AssetAnim.PLAYER_RUN)
             else:
                 self._set_anim(AssetAnim.PLAYER_IDLE)
@@ -174,19 +174,19 @@ class Player(PhysicsEntity):
             self._y_slide()
         elif self.jumps:
             self._bump(Vec2((0, -3)))
-            self.game.shake = max(16, self.game.shake - 1)
+            # self.game.shake = max(16, self.game.shake - 1)
 
     def _y_slide(self):
-        if self.flip and self.velocity_f.x < 0:
+        if self.flip and self.vel_f.x < 0:
             self._bump(Vec2((2.5, -2.5)))
-        elif not self.flip and self.velocity_f.x > 0:
+        elif not self.flip and self.vel_f.x > 0:
             self._bump(Vec2((-2.5, -2.5)))
 
     def _bump(self, vec=Vec2((0, -2.5))):
         self.in_air = True
         self.jumps = max(0, self.jumps - 1)
-        self.velocity.x = vec.x
-        self.velocity.y = vec.y
+        self.vel.x = vec.x
+        self.vel.y = vec.y
 
     def dash(self):
         if not self.dashing:

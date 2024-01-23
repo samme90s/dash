@@ -5,7 +5,7 @@ import pygame
 
 from scripts.assets import AssetLayer, Assets
 from scripts.tilemap import Tilemap
-from scripts.utils import Direction, Vec2
+from scripts.utils import Dir, Vec2
 
 SILHOUETTE_OFFSETS = ((-1, 0), (1, 0), (0, -1), (0, 1))
 
@@ -27,7 +27,7 @@ class Instance(ABC):
         # Update this value every frame.
         self.delta_time = 60 / 1000
 
-        self.direction = Direction()
+        self.dir = Dir()
         self.assets = Assets()
         self.tilemap = Tilemap(self, tile_size=16)
         try:

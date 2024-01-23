@@ -57,7 +57,7 @@ class Anim:
         return self.images[int(self.frame / self.img_dur)]
 
 
-class Direction:
+class Dir:
     def __init__(self, left=False, right=False, up=False, down=False):
         self.left = left
         self.right = right

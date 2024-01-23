@@ -17,17 +17,17 @@ class Editor(Instance):
 
         self.binds = (
             Key((pygame.K_a, pygame.K_LEFT),
-                lambda: self.direction.toggle_left(),
-                lambda: self.direction.toggle_left()),
+                lambda: self.dir.toggle_left(),
+                lambda: self.dir.toggle_left()),
             Key((pygame.K_d, pygame.K_RIGHT),
-                lambda: self.direction.toggle_right(),
-                lambda: self.direction.toggle_right()),
+                lambda: self.dir.toggle_right(),
+                lambda: self.dir.toggle_right()),
             Key((pygame.K_w, pygame.K_UP),
-                lambda: self.direction.toggle_up(),
-                lambda: self.direction.toggle_up()),
+                lambda: self.dir.toggle_up(),
+                lambda: self.dir.toggle_up()),
             Key((pygame.K_s, pygame.K_DOWN),
-                lambda: self.direction.toggle_down(),
-                lambda: self.direction.toggle_down()),
+                lambda: self.dir.toggle_down(),
+                lambda: self.dir.toggle_down()),
             Key(pygame.K_g,
                 lambda: self._toggle_ongrid()),
             Key(pygame.K_t,
@@ -96,10 +96,10 @@ class Editor(Instance):
             self._render()
 
     def _handle_scroll(self):
-        self.scroll = self.scroll.add(((self.direction.right -
-                                       self.direction.left) * 5,
-                                       (self.direction.down -
-                                       self.direction.up) * 5))
+        self.scroll = self.scroll.add(((self.dir.right -
+                                       self.dir.left) * 5,
+                                       (self.dir.down -
+                                       self.dir.up) * 5))
         self.render_scroll = self.scroll.int()
 
     def _handle_tilemap(self):

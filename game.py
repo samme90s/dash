@@ -19,11 +19,11 @@ class Game(Instance):
 
         self.binds = (
             Key((pygame.K_a, pygame.K_LEFT),
-                lambda: self.direction.toggle_left(),
-                lambda: self.direction.toggle_left()),
+                lambda: self.dir.toggle_left(),
+                lambda: self.dir.toggle_left()),
             Key((pygame.K_d, pygame.K_RIGHT),
-                lambda: self.direction.toggle_right(),
-                lambda: self.direction.toggle_right()),
+                lambda: self.dir.toggle_right(),
+                lambda: self.dir.toggle_right()),
             Key((pygame.K_SPACE, pygame.K_UP),
                 lambda: self.player.jump()),
             Key(pygame.K_LSHIFT,
@@ -92,7 +92,7 @@ class Game(Instance):
         self.tilemap.render()
 
     def _handle_player(self):
-        self.player.update()
+        self.player.update(self.dir)
         self.player.render()
 
     def _handle_particles(self):
