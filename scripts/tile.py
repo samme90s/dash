@@ -1,15 +1,15 @@
 class Tile:
-    def __init__(self, type, variant, pos):
+    def __init__(self, type, var, pos):
         self.type = type
-        self.variant = variant
+        self.var = var
         self.pos = pos.deepcopy()
 
     def deepcopy(self):
-        return Tile(self.type, self.variant, self.pos)
+        return Tile(self.type, self.var, self.pos)
 
     def to_dict(self):
         return {
             'type': self.type.name,
-            'variant': self.variant,
+            'var': self.var,
             'pos': self.pos.tuple(),
         }
