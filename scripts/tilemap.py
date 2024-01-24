@@ -68,9 +68,16 @@ class Tilemap:
             tile_type = AssetTile[tile['type']]
             tile_var = tile['var']
             tile_pos = Vec2(tile['pos'])
-            self.offgrid_tiles.append(Tile(tile_type,
-                                           tile_var,
-                                           tile_pos))
+            self.offgrid_tiles.append(
+                Tile(tile_type,
+                     tile_var,
+                     tile_pos))
+
+    def solid_check(self, pos=Vec2((0, 0))):
+        tile_loc = pos.div_f(self.tile_size).int().json()
+        if tile_loc in self.tilemap:
+            if self.tilemap[tile_loc].type in PHYSICS_TILES:
+                return self.tilemap[tile_loc]
 
     def extract(self, id_pairs, keep=False):
         matches = []
@@ -134,16 +141,17 @@ class Tilemap:
                         .sub(self.game.render_scroll)
                         .tuple())
 
-    def physics_rects_around(self, pos):
+    def physics_rects_around(self, pos=Vec2((0, 0))):
         rects = []
         for tile in self.tiles_around(pos):
             if tile.type in PHYSICS_TILES:
-                rects.append(pygame.Rect(*tile.pos.mult(self.tile_size),
-                                         self.tile_size,
-                                         self.tile_size))
+                rects.append(
+                    pygame.Rect(*tile.pos.mult(self.tile_size),
+                                self.tile_size,
+                                self.tile_size))
         return tuple(rects)
 
-    def tiles_around(self, pos):
+    def tiles_around(self, pos=Vec2((0, 0))):
         tiles = []
         # Using this formula ensures correct index. Otherwise, we may get
         # rounding errors or extra digits.
