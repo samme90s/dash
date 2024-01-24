@@ -1,6 +1,6 @@
 from enum import Enum
 
-from scripts.utils import Anim, load_images
+from scripts.utils import Anim, load_image, load_images
 
 
 class AssetAnim(Enum):
@@ -18,6 +18,11 @@ class AssetAnim(Enum):
 class AssetLayer(Enum):
     BACKGROUND = 'layers/backgrounds'
     CLOUD = 'layers/clouds'
+
+
+class AssetSprite(Enum):
+    GUN = 'gun.png'
+    PROJECTILE = 'projectile.png'
 
 
 class AssetTile(Enum):
@@ -64,6 +69,12 @@ class Assets:
             AssetLayer.CLOUD.value: load_images(
                 AssetLayer.CLOUD.value)
         }
+        self.sprites = {
+            AssetSprite.GUN.value: load_image(
+                AssetSprite.GUN.value),
+            AssetSprite.PROJECTILE.value: load_image(
+                AssetSprite.PROJECTILE.value)
+        }
         self.tiles = {
             AssetTile.DECOR.value: load_images(
                 AssetTile.DECOR.value),
@@ -87,6 +98,12 @@ class Assets:
             return self.layers[type.value][var]
 
         raise FileNotFoundError()
+
+    def get_sprite(self, type: AssetSprite):
+        if self.sprites[type.value] is None:
+            raise FileNotFoundError()
+
+        return self.sprites[type.value]
 
     def get_tiles(self, type: AssetTile, var=-1):
         if var < 0:
