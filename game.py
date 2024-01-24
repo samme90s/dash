@@ -3,9 +3,9 @@ import sys
 import pygame
 
 from instance import Instance
-from scripts.assets import AssetAnim, AssetLayer, AssetTile
+from scripts.assets import AssetAnim, AssetLayer, AssetSprite, AssetTile
 from scripts.clouds import Clouds
-from scripts.entities import Player
+from scripts.entities import Enemy, Player
 from scripts.particle import ParticleSpawner
 from scripts.utils import Key, Vec2, get_rects
 
@@ -61,15 +61,16 @@ class Game(Instance):
             rand_f=True,
             rects=stone_rects,
             spawn_r=0.002)
+        self.projs = []
         self.parts = []
-
+        self.enemies = []
         for spawn in self.tilemap.extract(
             [(AssetTile.SPAWNERS, 0),
              (AssetTile.SPAWNERS, 1)]):
             if spawn.var == 0:
                 self.player.pos = spawn.pos
             else:
-                print(spawn.pos, 'enemy')
+                self.enemies.append(Enemy(self, (8, 15), spawn.pos))
 
     def run(self):
         while True:
@@ -78,8 +79,10 @@ class Game(Instance):
             self._handle_scroll()
             self._handle_clouds()
             self._handle_tilemap()
-            self._handle_particles()
+            self._handle_enemies()
             self._handle_player()
+            self._handle_projs()
+            self._handle_parts()
             self._handle_events()
             self._render()
 
@@ -104,11 +107,34 @@ class Game(Instance):
     def _handle_tilemap(self):
         self.tilemap.render()
 
+    def _handle_enemies(self):
+        for enemy in self.enemies.copy():
+            enemy.update(Vec2((0, 0)))
+            enemy.render()
+
     def _handle_player(self):
-        self.player.update(self.dir)
+        self.player.update(
+            Vec2((self.dir.right - self.dir.left,
+                  self.dir.down - self.dir.up)))
         self.player.render()
 
-    def _handle_particles(self):
+    # [[x, y], direction, timer]
+    def _handle_projs(self):
+        for proj in self.projs.copy():
+            proj[0].x += proj[1]
+            proj[2] += 1
+            img = self.assets.get_sprite(AssetSprite.PROJECTILE)
+            self.fore_d.blit(
+                img,
+                (proj[0].x - img.get_width() / 2 - self.render_scroll.x,
+                 proj[0].y - img.get_height() / 2 - self.render_scroll.y))
+            if self.tilemap.solid_check(proj[0]) or proj[2] > 360:
+                self.projs.remove(proj)
+            elif self.player.dashing_dur < 50:
+                if self.player.rect().collidepoint(proj[0].tuple()):
+                    self.projs.remove(proj)
+
+    def _handle_parts(self):
         self.leaf_spawner.update()
         self.dark_spawner.update()
         # Could always separate entity and tile particles by creating two

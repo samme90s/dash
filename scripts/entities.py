@@ -1,6 +1,8 @@
+import random
+
 import pygame
 
-from scripts.assets import AssetAnim
+from scripts.assets import AssetAnim, AssetSprite
 from scripts.particle import Particle, get_parts_burst
 from scripts.utils import Dir, Vec2
 
@@ -25,9 +27,9 @@ class PhysicsEntity:
             self.asset = asset
             self.anim = self.game.assets.get_anim(asset).deepcopy()
 
-    def update(self, dir):
+    def update(self, movement=Vec2((0, 0))):
         self.collisions.reset()
-        self._update_vel_f(dir)
+        self._update_vel_f(movement)
         self._handle_flip()
         self._handle_anim()
         # Update each axis independently.
@@ -36,10 +38,8 @@ class PhysicsEntity:
         self._apply_gravity()
         self._norm_vel_x()
 
-    def _update_vel_f(self, dir):
-        self.vel_f = self.vel.add(
-            (dir.right - dir.left,
-             dir.down - dir.up))
+    def _update_vel_f(self, movement):
+        self.vel_f = self.vel.add(movement)
 
     def _handle_flip(self):
         if self.vel_f.x > 0:
@@ -106,6 +106,62 @@ class PhysicsEntity:
 class Enemy(PhysicsEntity):
     def __init__(self, game, size, pos):
         super().__init__(game, AssetAnim.ENEMY_IDLE, size, pos)
+        self.walking = 0
+
+    def update(self, movement=Vec2((0, 0))):
+        if self.walking:
+            # Not walking off edges.
+            if self.game.tilemap.solid_check(
+                Vec2((self.rect().centerx + (-7 if self.flip else 7),
+                      self.pos.y + 23))):
+                # Check wall collision.
+                if self.collisions.right or self.collisions.left:
+                    self.flip = not self.flip
+                else:
+                    if self.flip:
+                        movement = movement.add((-0.5, 0))
+                    else:
+                        movement = movement.add((0.5, 0))
+            else:
+                self.flip = not self.flip
+
+            # Reduce movement interval.
+            self.walking = max(0, self.walking - 1)
+            if not self.walking:
+                dis = (self.game.player.pos.x - self.pos.x,
+                       self.game.player.pos.y - self.pos.y)
+                if (abs(dis[1]) < 16):
+                    if (self.flip and dis[0] < 0):
+                        self.game.projs.append([Vec2((self.rect().centerx - 7,
+                                                      self.rect().centery)),
+                                               -1.5, 0])
+                    if (not self.flip and dis[0] > 0):
+                        self.game.projs.append([Vec2((self.rect().centerx + 7,
+                                                      self.rect().centery)),
+                                               1.5, 0])
+        elif random.random() < 0.01:
+            self.walking = random.randint(30, 120)
+        super().update(movement)
+
+        if movement.x != 0:
+            self._set_anim(AssetAnim.ENEMY_RUN)
+        else:
+            self._set_anim(AssetAnim.ENEMY_IDLE)
+
+    def render(self):
+        super().render()
+
+        gun_img = self.game.assets.get_sprite(AssetSprite.GUN)
+        if self.flip:
+            self.game.fore_d.blit(
+                pygame.transform.flip(gun_img, True, False),
+                (self.rect().centerx - 4 - gun_img.get_width() - self.game.render_scroll.x,
+                 self.rect().centery - self.game.render_scroll.y))
+        else:
+            self.game.fore_d.blit(
+                gun_img,
+                (self.rect().centerx + 4 - self.game.render_scroll.x,
+                 self.rect().centery - self.game.render_scroll.y))
 
 
 class Player(PhysicsEntity):
@@ -120,8 +176,8 @@ class Player(PhysicsEntity):
         self.dashing_dur = 12
         self.dashing_max = 60
 
-    def update(self, dir):
-        super().update(dir)
+    def update(self, movement=Vec2((0, 0))):
+        super().update(movement)
         if self.collisions.down:
             self.in_air = False
             self.jumps = self.jumps_max
