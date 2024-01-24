@@ -1,9 +1,11 @@
+import math
 import random
 
 import pygame
 
 from scripts.assets import AssetAnim, AssetSprite
 from scripts.particle import Particle, get_parts_burst
+from scripts.spark import Spark
 from scripts.utils import Dir, Vec2
 
 
@@ -132,13 +134,20 @@ class Enemy(PhysicsEntity):
                        self.game.player.pos.y - self.pos.y)
                 if (abs(dis[1]) < 16):
                     if (self.flip and dis[0] < 0):
-                        self.game.projs.append([Vec2((self.rect().centerx - 7,
-                                                      self.rect().centery)),
-                                               -1.5, 0])
+                        self.game.sfx['shoot'].play()
+                        self.game.projs.append(
+                            [Vec2((self.rect().centerx - 7, self.rect().centery)), -1.5, 0])
+                        for i in range(4):
+                            self.game.sparks.append(Spark(
+                                self.game.projs[-1][0], random.random() - 0.5 + math.pi, 2 + random.random()))
                     if (not self.flip and dis[0] > 0):
-                        self.game.projs.append([Vec2((self.rect().centerx + 7,
-                                                      self.rect().centery)),
-                                               1.5, 0])
+                        self.game.sfx['shoot'].play()
+                        self.game.projs.append(
+                            [Vec2((self.rect().centerx + 7, self.rect().centery)), 1.5, 0])
+                        for i in range(4):
+                            self.game.sparks.append(
+                                Spark(self.game.projs[-1][0], random.random() - 0.5, 2 + random.random()))
+
         elif random.random() < 0.01:
             self.walking = random.randint(30, 120)
         super().update(movement)
@@ -147,6 +156,23 @@ class Enemy(PhysicsEntity):
             self._set_anim(AssetAnim.ENEMY_RUN)
         else:
             self._set_anim(AssetAnim.ENEMY_IDLE)
+
+        if self.game.player.dashing >= 50:
+            if self.rect().colliderect(self.game.player.rect()):
+                self.game.sfx['hit'].play()
+                self.game.shake = max(16, self.game.shake)
+                for i in range(30):
+                    angle = random.random() * math.pi * 2
+                    speed = random.random() * 5
+                    self.game.sparks.append(
+                        Spark(Vec2(self.rect().center), angle, 2 + random.random()))
+                    self.game.parts.append(Particle(self.game, AssetAnim.PARTICLE_DARK, Vec2(self.rect().center), vel=Vec2(
+                        (math.cos(angle + math.pi) * speed * 0.5, math.sin(angle + math.pi) * speed * 0.5))))
+                self.game.sparks.append(
+                    Spark(Vec2(self.rect().center), 0, 5 + random.random()))
+                self.game.sparks.append(
+                    Spark(Vec2(self.rect().center), math.pi, 5 + random.random()))
+                return True
 
     def render(self):
         super().render()
@@ -168,6 +194,7 @@ class Player(PhysicsEntity):
     def __init__(self, game, size, pos):
         super().__init__(game, AssetAnim.PLAYER_IDLE, size, pos)
         self.in_air = True
+        self.air_time = 0
         self.jumps_max = 2
         self.jumps = self.jumps_max
         self.y_slide = False
@@ -180,7 +207,15 @@ class Player(PhysicsEntity):
         super().update(movement)
         if self.collisions.down:
             self.in_air = False
+            self.air_time = 0
             self.jumps = self.jumps_max
+        elif not self.collisions.right and not self.collisions.left:
+            self.in_air = True
+            self.air_time += 1
+
+        if self.air_time > 300:
+            self.air_time = 0
+            self.game.dead += 1
 
         self.y_slide = False
         if (self.collisions.right or self.collisions.left) and self.in_air:
@@ -221,7 +256,7 @@ class Player(PhysicsEntity):
 
     def _update_anim(self):
         if not self.y_slide:
-            if self.in_air:
+            if self.in_air and self.air_time > self.anim.img_dur:
                 self._set_anim(AssetAnim.PLAYER_JUMP)
             elif self.dashing > self.dashing_max - self.dashing_dur:
                 self._set_anim(AssetAnim.PLAYER_SLIDE)
@@ -235,7 +270,6 @@ class Player(PhysicsEntity):
             self._y_slide()
         elif self.jumps:
             self._bump(Vec2((0, -3)))
-            # self.game.shake = max(16, self.game.shake - 1)
 
     def _y_slide(self):
         if self.flip and self.vel_f.x < 0:
@@ -244,6 +278,7 @@ class Player(PhysicsEntity):
             self._bump(Vec2((-2.5, -2.5)))
 
     def _bump(self, vec=Vec2((0, -2.5))):
+        self.game.sfx['jump'].play()
         self.in_air = True
         self.jumps = max(0, self.jumps - 1)
         self.vel.x = vec.x
@@ -251,4 +286,5 @@ class Player(PhysicsEntity):
 
     def dash(self):
         if not self.dashing:
+            self.game.sfx['dash'].play()
             self.dashing = self.dashing_max

@@ -1,3 +1,6 @@
+import math
+import os
+import random
 import sys
 
 import pygame
@@ -6,14 +9,14 @@ from instance import Instance
 from scripts.assets import AssetAnim, AssetLayer, AssetSprite, AssetTile
 from scripts.clouds import Clouds
 from scripts.entities import Enemy, Player
-from scripts.particle import ParticleSpawner
+from scripts.particle import Particle, ParticleSpawner
+from scripts.spark import Spark
 from scripts.utils import Key, Vec2, get_rects
 
 
 class Game(Instance):
     def __init__(self):
         super().__init__(title='python',
-                         map_path='map.json',
                          res_base=(320, 180),
                          res_scale=3.0)
 
@@ -29,9 +32,80 @@ class Game(Instance):
             Key(pygame.K_LSHIFT,
                 lambda: self.player.dash()))
 
+        self.sfx = {
+            'jump': pygame.mixer.Sound('data/sfx/jump.wav'),
+            'dash': pygame.mixer.Sound('data/sfx/dash.wav'),
+            'hit': pygame.mixer.Sound('data/sfx/hit.wav'),
+            'shoot': pygame.mixer.Sound('data/sfx/shoot.wav'),
+            'ambience': pygame.mixer.Sound('data/sfx/ambience.wav'),
+        }
+        self.sfx['ambience'].set_volume(0.2)
+        self.sfx['shoot'].set_volume(0.4)
+        self.sfx['hit'].set_volume(0.8)
+        self.sfx['dash'].set_volume(0.3)
+        self.sfx['jump'].set_volume(0.7)
+
         self.clouds = Clouds(self.assets.get_layers(AssetLayer.CLOUD), count=16)
         self.player = Player(self, (8, 15), Vec2((50, 50)))
+        self.level = 0
+        self._load_level(self.level)
 
+    def run(self):
+        pygame.mixer.music.load('data/music.wav')
+        pygame.mixer.music.set_volume(0.5)
+        # -1 to loop indefinitely
+        pygame.mixer.music.play(-1)
+        self.sfx['ambience'].play(-1)
+
+        while True:
+            # Order is important here!
+            self._clear()
+
+            if self.dead:
+                self.dead += 1
+                if self.dead >= 10:
+                    self.transition = min(30, self.transition + 1)
+                if self.dead >= 40:
+                    self._load_level(self.level)
+
+            if not len(self.enemies):
+                self.transition += 1
+                if self.transition > 30:
+                    self.level = min(
+                        len(os.listdir('data/maps/')) - 1, self.level + 1)
+                    self._load_level(self.level)
+            if self.transition < 0:
+                self.transition += 1
+
+            self._handle_scroll()
+            self._handle_clouds()
+            self._handle_tilemap()
+            self._handle_enemies()
+            self._handle_player()
+            self._handle_projs()
+            self._handle_sparks()
+            self._handle_parts()
+            self._handle_events()
+
+            if self.transition:
+                transition_surf = pygame.Surface(self.fore_d.get_size())
+                pygame.draw.circle(transition_surf,
+                                   (255, 255, 255),
+                                   (self.fore_d.get_width() // 2,
+                                    self.fore_d.get_height() // 2),
+                                   (30 - abs(self.transition)) * 8)
+                transition_surf.set_colorkey((255, 255, 255))
+                self.fore_d.blit(transition_surf, (0, 0))
+
+            self._render()
+
+    def _clear(self):
+        super()._clear()
+        self.back_d.blit(
+            self.assets.get_layers(AssetLayer.BACKGROUND, 0), (0, 0))
+
+    def _load_level(self, map_id):
+        super()._load_level(map_id)
         tree_rects = get_rects(
             game=self,
             type=AssetTile.LARGE_DECOR,
@@ -63,7 +137,10 @@ class Game(Instance):
             spawn_r=0.002)
         self.projs = []
         self.parts = []
+        self.sparks = []
         self.enemies = []
+        self.dead = 0
+        self.transition = -30
         for spawn in self.tilemap.extract(
             [(AssetTile.SPAWNERS, 0),
              (AssetTile.SPAWNERS, 1)]):
@@ -71,25 +148,6 @@ class Game(Instance):
                 self.player.pos = spawn.pos
             else:
                 self.enemies.append(Enemy(self, (8, 15), spawn.pos))
-
-    def run(self):
-        while True:
-            # Order is important here!
-            self._clear()
-            self._handle_scroll()
-            self._handle_clouds()
-            self._handle_tilemap()
-            self._handle_enemies()
-            self._handle_player()
-            self._handle_projs()
-            self._handle_parts()
-            self._handle_events()
-            self._render()
-
-    def _clear(self):
-        super()._clear()
-        self.back_d.blit(
-            self.assets.get_layers(AssetLayer.BACKGROUND, 0), (0, 0))
 
     def _handle_scroll(self):
         self.scroll = self.scroll.add(((self.player.rect().centerx
@@ -109,14 +167,18 @@ class Game(Instance):
 
     def _handle_enemies(self):
         for enemy in self.enemies.copy():
-            enemy.update(Vec2((0, 0)))
+            kill = enemy.update(Vec2((0, 0)))
             enemy.render()
 
+            if kill:
+                self.enemies.remove(enemy)
+
     def _handle_player(self):
-        self.player.update(
-            Vec2((self.dir.right - self.dir.left,
-                  self.dir.down - self.dir.up)))
-        self.player.render()
+        if not self.dead:
+            self.player.update(
+                Vec2((self.dir.right - self.dir.left,
+                     self.dir.down - self.dir.up)))
+            self.player.render()
 
     # [[x, y], direction, timer]
     def _handle_projs(self):
@@ -130,9 +192,35 @@ class Game(Instance):
                  proj[0].y - img.get_height() / 2 - self.render_scroll.y))
             if self.tilemap.solid_check(proj[0]) or proj[2] > 360:
                 self.projs.remove(proj)
+                for i in range(4):
+                    self.sparks.append(Spark(proj[0], random.random(
+                    ) - 0.5 + (math.pi if proj[1] > 0 else 0), 2 + random.random()))
             elif self.player.dashing_dur < 50:
                 if self.player.rect().collidepoint(proj[0].tuple()):
                     self.projs.remove(proj)
+                    self.sfx['hit'].play()
+                    self.shake = max(48, self.shake)
+                    self.dead += 1
+                    for i in range(30):
+                        angle = random.random() * math.pi * 2
+                        speed = random.random() * 5
+                        self.sparks.append(Spark(Vec2(self.player.rect().center),
+                                                 angle,
+                                                 2 + random.random()))
+                        self.parts.append(Particle(self,
+                                                   AssetAnim.PARTICLE_DARK,
+                                                   Vec2(
+                                                       self.player.rect().center),
+                                                   vel=Vec2((math.cos(angle + math.pi) * speed * 0.5,
+                                                             math.sin(angle + math.pi) * speed * 0.5))))
+
+    def _handle_sparks(self):
+        for spark in self.sparks.copy():
+            kill = spark.update()
+
+            spark.render(self.fore_d, offset=self.render_scroll)
+            if kill:
+                self.sparks.remove(spark)
 
     def _handle_parts(self):
         self.leaf_spawner.update()

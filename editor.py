@@ -11,7 +11,7 @@ from scripts.utils import Key, Mouse, Vec2
 class Editor(Instance):
     def __init__(self):
         super().__init__(title='editor',
-                         map_path='map.json',
+                         map_id='0',
                          res_base=(320, 180),
                          res_scale=2.0)
 
@@ -62,7 +62,7 @@ class Editor(Instance):
         self.click = not self.click
         # This prevents accidental placement of multiple instances.
         if self.click and not self.ongrid:
-            self.tilemap.offgrid_tiles.append(
+            self.tilemap.offgrid.append(
                 Tile(self.tile_type,
                      self.tile_var,
                      self.mpos.add(self.scroll)))
@@ -109,7 +109,7 @@ class Editor(Instance):
         self.mpos = Vec2(pygame.mouse.get_pos()).div(self.RES_SCALE)
         self.tile_pos = (self.mpos
                          .add(self.scroll)
-                         .div_f(self.tilemap.tile_size)
+                         .div_f(self.tilemap.size)
                          .int())
 
     def _handle_tile_preview(self):
@@ -120,7 +120,7 @@ class Editor(Instance):
         if self.ongrid:
             self.fore_d.blit(current_tile_img,
                              self.tile_pos
-                             .mult(self.tilemap.tile_size)
+                             .mult(self.tilemap.size)
                              .sub(self.scroll)
                              .tuple())
         else:
@@ -140,12 +140,12 @@ class Editor(Instance):
             tile_loc = self.tile_pos.json()
             if tile_loc in self.tilemap.tilemap:
                 del self.tilemap.tilemap[tile_loc]
-            for tile in self.tilemap.offgrid_tiles.copy():
+            for tile in self.tilemap.offgrid.copy():
                 tile_img = self.assets.get_tiles(tile.type, tile.var)
                 tile_r = pygame.Rect(*tile.pos.sub(self.scroll),
                                      *tile_img.get_size())
                 if tile_r.collidepoint(self.mpos.tuple()):
-                    self.tilemap.offgrid_tiles.remove(tile)
+                    self.tilemap.offgrid.remove(tile)
 
     def _handle_events(self):
         for event in pygame.event.get():

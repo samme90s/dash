@@ -11,8 +11,8 @@ SILHOUETTE_OFFSETS = ((-1, 0), (1, 0), (0, -1), (0, 1))
 
 
 class Instance(ABC):
-    def __init__(self, title: str,
-                 map_path: str,
+    def __init__(self,
+                 title: str,
                  res_base: tuple = (320, 180),
                  res_scale: float = 2.0):
         self.RES_SCALE = res_scale
@@ -29,12 +29,7 @@ class Instance(ABC):
 
         self.dir = Dir()
         self.assets = Assets()
-        self.tilemap = Tilemap(self, tile_size=16)
-        try:
-            self.tilemap.load(map_path)
-        except FileNotFoundError:
-            raise FileNotFoundError
-
+        self.tilemap = Tilemap(self, size=16)
         self.shake = 0
         self.scroll = Vec2((0, 0))
         self.render_scroll = Vec2((0, 0))
@@ -42,6 +37,12 @@ class Instance(ABC):
     @abstractmethod
     def run(self):
         raise NotImplementedError
+
+    def _load_level(self, map_id):
+        try:
+            self.tilemap.load(f'data/maps/{map_id}.json')
+        except FileNotFoundError:
+            raise FileNotFoundError
 
     def _clear(self):
         self.fore_d.fill((0, 0, 0, 0))

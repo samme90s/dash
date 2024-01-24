@@ -34,18 +34,18 @@ AUTOTILE_MAP = {
 
 
 class Tilemap:
-    def __init__(self, game, tile_size=16):
+    def __init__(self, game, size=16):
         self.game = game
-        self.tile_size = tile_size
+        self.size = size
         self.tilemap = {}
-        self.offgrid_tiles = []
+        self.offgrid = []
 
     def save(self, path):
         f = open(path, 'w')
         json.dump({
             'tilemap': self.tilemap,
-            'tile_size': self.tile_size,
-            'offgrid_tiles': self.offgrid_tiles
+            'size': self.size,
+            'offgrid': self.offgrid
         }, f, cls=Encoder)
         f.close()
 
@@ -62,36 +62,36 @@ class Tilemap:
                                                  tile_var,
                                                  tile_pos)
 
-        self.tile_size = map_data['tile_size']
+        self.size = map_data['size']
 
-        for tile in map_data['offgrid_tiles']:
+        for tile in map_data['offgrid']:
             tile_type = AssetTile[tile['type']]
             tile_var = tile['var']
             tile_pos = Vec2(tile['pos'])
-            self.offgrid_tiles.append(
+            self.offgrid.append(
                 Tile(tile_type,
                      tile_var,
                      tile_pos))
 
     def solid_check(self, pos=Vec2((0, 0))):
-        tile_loc = pos.div_f(self.tile_size).int().json()
+        tile_loc = pos.div_f(self.size).int().json()
         if tile_loc in self.tilemap:
             if self.tilemap[tile_loc].type in PHYSICS_TILES:
                 return self.tilemap[tile_loc]
 
     def extract(self, id_pairs, keep=False):
         matches = []
-        for tile in self.offgrid_tiles.copy():
+        for tile in self.offgrid.copy():
             if (tile.type, tile.var) in id_pairs:
                 matches.append(tile.deepcopy())
                 if not keep:
-                    self.offgrid_tiles.remove(tile)
+                    self.offgrid.remove(tile)
 
         for loc in self.tilemap:
             tile = self.tilemap[loc]
             if (tile.type, tile.var) in id_pairs:
                 matches.append(tile.deepcopy())
-                matches[-1].pos = matches[-1].pos.mult(self.tile_size)
+                matches[-1].pos = matches[-1].pos.mult(self.size)
                 if not keep:
                     del self.tilemap[loc]
 
@@ -114,7 +114,7 @@ class Tilemap:
     def render(self):
         # Offgrid tiles are often rendered as decorations, therefor we should
         # render them first so that they are applied behind the grid.
-        for tile in self.offgrid_tiles:
+        for tile in self.offgrid:
             self.game.fore_d.blit(
                 self.game.assets.get_tiles(tile.type, tile.var),
                 tile.pos
@@ -122,11 +122,11 @@ class Tilemap:
                 .tuple())
 
         # Optimization to only render tiles that are visible.
-        top_left_tile = self.game.render_scroll.div_f(self.tile_size)
+        top_left_tile = self.game.render_scroll.div_f(self.size)
         # Add one to compensate for rounding errors.
         top_right_tile = (self.game.render_scroll
                           .add(self.game.fore_d.get_size())
-                          .div_f(self.tile_size)
+                          .div_f(self.size)
                           .add((1, 1)))
 
         for x in range(top_left_tile.x, top_right_tile.x):
@@ -137,7 +137,7 @@ class Tilemap:
                     self.game.fore_d.blit(
                         self.game.assets.get_tiles(tile.type, tile.var),
                         tile.pos
-                        .mult(self.tile_size)
+                        .mult(self.size)
                         .sub(self.game.render_scroll)
                         .tuple())
 
@@ -146,16 +146,16 @@ class Tilemap:
         for tile in self.tiles_around(pos):
             if tile.type in PHYSICS_TILES:
                 rects.append(
-                    pygame.Rect(*tile.pos.mult(self.tile_size),
-                                self.tile_size,
-                                self.tile_size))
+                    pygame.Rect(*tile.pos.mult(self.size),
+                                self.size,
+                                self.size))
         return tuple(rects)
 
     def tiles_around(self, pos=Vec2((0, 0))):
         tiles = []
         # Using this formula ensures correct index. Otherwise, we may get
         # rounding errors or extra digits.
-        tile_loc = pos.div_f(self.tile_size).int()
+        tile_loc = pos.div_f(self.size).int()
         for offset in NEIGHBOR_OFFSETS:
             check_loc = tile_loc.add(offset).json()
             if check_loc in self.tilemap:
