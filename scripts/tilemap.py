@@ -129,10 +129,11 @@ class Tilemap:
         # Optimization to only render tiles that are visible.
         top_left_tile = self.game.render_scroll.div_f(self.size)
         # Add one to compensate for rounding errors.
-        top_right_tile = (self.game.render_scroll
-                          .add(self.game.fore_d.get_size())
-                          .div_f(self.size)
-                          .add((1, 1)))
+        top_right_tile = (
+            self.game.render_scroll
+            .add(self.game.fore_d.get_size())
+            .div_f(self.size)
+            .add((1, 1)))
 
         for x in range(top_left_tile.x, top_right_tile.x):
             for y in range(top_left_tile.y, top_right_tile.y):

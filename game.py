@@ -155,25 +155,31 @@ class Game(Instance):
             self.fore_d.blit(img, pos)
 
             if self.tilemap.solid_check(proj.pos) or proj.timer > 360:
-                self.projs.remove(proj)
-                for spark in SparkFactory.cone(
-                        proj.pos,
-                        (math.pi if proj.vel.x > 0 else 0)):
-                    self.sparks.append(spark)
-            elif self.player.dashing < self.player.dashing_diff:
-                if self.player.rect().collidepoint(proj.pos.tuple()):
-                    self.projs.remove(proj)
-                    self.sounds.get_sfx(SoundEffect.HIT).play()
-                    self.shake = max(48, self.shake)
-                    self.player.hitpoint.reduce(1)
-                    for spark in SparkFactory.burst(
-                            Vec2(self.player.rect().center)):
-                        self.sparks.append(spark)
-                    for part in PartFactory.burst(
-                            self,
-                            AssetAnim.PARTICLE_DARK,
-                            Vec2(self.player.rect().center)):
-                        self.parts.append(part)
+                self.handle_proj_solid(proj)
+            elif (self.player.dashing < self.player.dashing_diff and
+                  self.player.rect().collidepoint(proj.pos.tuple())):
+                self.handle_proj_hit(proj)
+
+    def handle_proj_solid(self, proj):
+        self.projs.remove(proj)
+        for spark in SparkFactory.cone(
+                proj.pos,
+                (math.pi if proj.vel.x > 0 else 0)):
+            self.sparks.append(spark)
+
+    def handle_proj_hit(self, proj):
+        self.projs.remove(proj)
+        self.sounds.get_sfx(SoundEffect.HIT).play()
+        self.shake = max(48, self.shake)
+        self.player.hitpoint.reduce(1)
+        for spark in SparkFactory.burst(
+                Vec2(self.player.rect().center)):
+            self.sparks.append(spark)
+        for part in PartFactory.burst(
+                self,
+                AssetAnim.PARTICLE_DARK,
+                Vec2(self.player.rect().center)):
+            self.parts.append(part)
 
     def handle_sparks(self):
         for spark in self.sparks.copy():

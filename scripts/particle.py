@@ -39,8 +39,9 @@ class Particle:
                 0, len(self.anim.images) * (self.anim.img_dur - 1))
 
     def sin_offset(self, speed=Vec2((0, 0)), amp=Vec2((0, 0))):
-        self.pos = self.pos.add((math.sin(self.anim.frame * speed.x) * amp.x,
-                                 math.sin(self.anim.frame * speed.y) * amp.y))
+        self.pos = self.pos.add(
+            (math.sin(self.anim.frame * speed.x) * amp.x,
+             math.sin(self.anim.frame * speed.y) * amp.y))
 
     def update(self):
         self.pos = self.pos.add(self.vel)
