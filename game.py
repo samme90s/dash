@@ -37,52 +37,28 @@ class Game(Instance):
         self.level = 0
 
     def run(self):
-        self._load_level(self.level)
+        self.load_level(self.level)
         self.sounds.load_music(SoundMusic.MUSIC, 0.5)
         self.sounds.get_ambient(SoundAmbience.AMBIENCE).play(-1)
 
         while True:
             # Order is important here!
-            self._clear()
+            self.clear()
+            self.handle_game_state()
+            self.handle_scroll()
+            self.handle_clouds()
+            self.handle_tilemap()
+            self.handle_enemies()
+            self.handle_player()
+            self.handle_projs()
+            self.handle_sparks()
+            self.handle_parts()
+            self.handle_transition()
+            self.handle_events()
+            self.render()
 
-            if self.player.hitpoint.is_dead():
-                self.transition = min(30, self.transition + 1)
-                if self.transition >= 30:
-                    self._load_level(self.level)
-
-            if not len(self.enemies):
-                self.transition += 1
-                if self.transition > 30:
-                    self.level = min(
-                        len(os.listdir('data/maps/')) - 1, self.level + 1)
-                    self._load_level(self.level)
-            if self.transition < 0:
-                self.transition += 1
-
-            self._handle_scroll()
-            self._handle_clouds()
-            self._handle_tilemap()
-            self._handle_enemies()
-            self._handle_player()
-            self._handle_projs()
-            self._handle_sparks()
-            self._handle_parts()
-            self._handle_events()
-
-            if self.transition:
-                transition_surf = pygame.Surface(self.fore_d.get_size())
-                pygame.draw.circle(transition_surf,
-                                   (255, 255, 255),
-                                   (self.fore_d.get_width() // 2,
-                                    self.fore_d.get_height() // 2),
-                                   (30 - abs(self.transition)) * 8)
-                transition_surf.set_colorkey((255, 255, 255))
-                self.fore_d.blit(transition_surf, (0, 0))
-
-            self._render()
-
-    def _load_level(self, map_id):
-        super()._load_level(map_id)
+    def load_level(self, map_id):
+        super().load_level(map_id)
         tree_rects = get_rects(
             game=self,
             type=AssetTile.LARGE_DECOR,
@@ -104,9 +80,9 @@ class Game(Instance):
         self.projs = []
         self.sparks = []
         self.transition = -30
-        self._handle_spawners()
+        self.handle_spawners()
 
-    def _handle_spawners(self):
+    def handle_spawners(self):
         for spawn in self.tilemap.extract([
                 (AssetTile.SPAWNERS, 0),
                 (AssetTile.SPAWNERS, 1)
@@ -116,12 +92,27 @@ class Game(Instance):
             else:
                 self.enemies.append(Enemy(self, (8, 15), spawn.pos))
 
-    def _clear(self):
-        super()._clear()
+    def clear(self):
+        super().clear()
         self.back_d.blit(
             self.assets.get_layers(AssetLayer.BACKGROUND, 0), (0, 0))
 
-    def _handle_scroll(self):
+    def handle_game_state(self):
+        if self.player.hitpoint.is_dead():
+            self.transition = min(30, self.transition + 1)
+            if self.transition >= 30:
+                self.load_level(self.level)
+
+        if not len(self.enemies):
+            self.transition += 1
+            if self.transition > 30:
+                self.level = min(
+                    len(os.listdir('data/maps/')) - 1, self.level + 1)
+                self.load_level(self.level)
+        if self.transition < 0:
+            self.transition += 1
+
+    def handle_scroll(self):
         self.scroll = self.scroll.add(
             ((self.player.rect().centerx
               - self.fore_d.get_width() / 2
@@ -131,14 +122,14 @@ class Game(Instance):
               - self.scroll.y) / 30))
         self.render_scroll = self.scroll.int()
 
-    def _handle_clouds(self):
+    def handle_clouds(self):
         self.clouds.update()
         self.clouds.render(self.back_d, offset=self.render_scroll)
 
-    def _handle_tilemap(self):
+    def handle_tilemap(self):
         self.tilemap.render()
 
-    def _handle_enemies(self):
+    def handle_enemies(self):
         for enemy in self.enemies.copy():
             enemy.update(Vec2((0, 0)))
             enemy.render()
@@ -146,23 +137,28 @@ class Game(Instance):
             if enemy.hitpoint.is_dead():
                 self.enemies.remove(enemy)
 
-    def _handle_player(self):
+    def handle_player(self):
         if not self.player.hitpoint.is_dead():
             self.player.update(Vec2((self.dir.right - self.dir.left,
                                      self.dir.down - self.dir.up)))
             self.player.render()
 
-    def _handle_projs(self):
+    def handle_projs(self):
         for proj in self.projs.copy():
             proj.pos = proj.pos.add(proj.vel)
             proj.timer += 1
             img = self.assets.get_sprite(AssetSprite.PROJECTILE)
-            pos = proj.pos.sub((img.get_width() / 2, img.get_height() / 2)).sub(self.render_scroll).tuple()
+            pos = (proj.pos
+                   .sub((img.get_width() / 2, img.get_height() / 2))
+                   .sub(self.render_scroll)
+                   .tuple())
             self.fore_d.blit(img, pos)
 
             if self.tilemap.solid_check(proj.pos) or proj.timer > 360:
                 self.projs.remove(proj)
-                for spark in SparkFactory.cone(proj.pos, (math.pi if proj.vel.x > 0 else 0)):
+                for spark in SparkFactory.cone(
+                        proj.pos,
+                        (math.pi if proj.vel.x > 0 else 0)):
                     self.sparks.append(spark)
             elif self.player.dashing < self.player.dashing_diff:
                 if self.player.rect().collidepoint(proj.pos.tuple()):
@@ -170,19 +166,23 @@ class Game(Instance):
                     self.sounds.get_sfx(SoundEffect.HIT).play()
                     self.shake = max(48, self.shake)
                     self.player.hitpoint.reduce(1)
-                    for spark in SparkFactory.burst(Vec2(self.player.rect().center)):
+                    for spark in SparkFactory.burst(
+                            Vec2(self.player.rect().center)):
                         self.sparks.append(spark)
-                    for part in PartFactory.burst(self, AssetAnim.PARTICLE_DARK, Vec2(self.player.rect().center)):
+                    for part in PartFactory.burst(
+                            self,
+                            AssetAnim.PARTICLE_DARK,
+                            Vec2(self.player.rect().center)):
                         self.parts.append(part)
 
-    def _handle_sparks(self):
+    def handle_sparks(self):
         for spark in self.sparks.copy():
             if not spark.update():
                 spark.render(self.fore_d, offset=self.render_scroll)
             else:
                 self.sparks.remove(spark)
 
-    def _handle_parts(self):
+    def handle_parts(self):
         self.leaf_spawner.update()
         # Could always separate entity and tile particles by creating two
         # separate lists.
@@ -195,13 +195,25 @@ class Game(Instance):
                 part.update()
                 part.render()
 
-    def _handle_events(self):
+    def handle_transition(self):
+        if self.transition:
+            transition_surf = pygame.Surface(self.fore_d.get_size())
+            pygame.draw.circle(
+                transition_surf,
+                (255, 255, 255),
+                (self.fore_d.get_width() // 2,
+                 self.fore_d.get_height() // 2),
+                (30 - abs(self.transition)) * 8)
+            transition_surf.set_colorkey((255, 255, 255))
+            self.fore_d.blit(transition_surf, (0, 0))
+
+    def handle_events(self):
         for event in pygame.event.get():
-            self._handle_window(event)
+            self.handle_window(event)
             for bind in self.binds:
                 bind.check(event)
 
-    def _handle_window(self, event):
+    def handle_window(self, event):
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()

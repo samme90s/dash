@@ -4,9 +4,9 @@ from scripts.utils import Vec2
 
 
 class Cloud:
-    def __init__(self, pos, img, speed, depth):
-        self.pos = Vec2(pos)
+    def __init__(self, img, pos=Vec2((0, 0)), speed=0, depth=0):
         self.img = img
+        self.pos = pos.deepcopy()
         self.speed = speed
         self.depth = depth
 
@@ -33,8 +33,8 @@ class Clouds:
 
         for _ in range(count):
             self.clouds.append(Cloud(
-                Vec2((random.random() * 1024, random.random() * 1024)),
                 random.choice(cloud_images),
+                Vec2((random.random() * 1024, random.random() * 1024)),
                 random.random() * 0.05 + 0.05,
                 random.random() * 0.6 + 0.2))
 

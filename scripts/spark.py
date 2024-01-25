@@ -54,5 +54,8 @@ class SparkFactory:
     def cone(pos=Vec2((0, 0)), angle=0):
         sparks = []
         for _ in range(4):
-            sparks.append(Spark(pos, random.random() - 0.5 + angle, 2 + random.random()))
+            sparks.append(
+                Spark(pos,
+                      random.random() - 0.5 + angle,
+                      2 + random.random()))
         return tuple(sparks)

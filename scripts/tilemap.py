@@ -7,19 +7,24 @@ from scripts.encoder import Encoder
 from scripts.tile import Tile
 from scripts.utils import Vec2
 
-NEIGHBOR_OFFSETS = (Vec2((-1, 0)),
-                    Vec2((-1, -1)),
-                    Vec2((0, -1)),
-                    Vec2((1, -1)),
-                    Vec2((1, 0)),
-                    Vec2((0, 0)),
-                    Vec2((-1, 1)),
-                    Vec2((0, 1)),
-                    Vec2((1, 1)))
-PHYSICS_TILES = {AssetTile.GRASS,
-                 AssetTile.STONE}
-AUTOTILE_TYPES = {AssetTile.GRASS,
-                  AssetTile.STONE}
+NEIGHBOR_OFFSETS = (
+    Vec2((-1, 0)),
+    Vec2((-1, -1)),
+    Vec2((0, -1)),
+    Vec2((1, -1)),
+    Vec2((1, 0)),
+    Vec2((0, 0)),
+    Vec2((-1, 1)),
+    Vec2((0, 1)),
+    Vec2((1, 1)))
+PHYSICS_TILES = {
+    AssetTile.GRASS,
+    AssetTile.STONE
+}
+AUTOTILE_TYPES = {
+    AssetTile.GRASS,
+    AssetTile.STONE
+}
 AUTOTILE_MAP = {
     tuple(sorted([(1, 0), (0, 1)])): 0,
     tuple(sorted([(1, 0), (0, 1), (-1, 0)])): 1,
