@@ -4,8 +4,10 @@ import random
 import pygame
 
 from scripts.assets import AssetAnim, AssetSprite
-from scripts.particle import Particle, get_parts_burst
-from scripts.spark import Spark
+from scripts.hitpoint import Hitpoint
+from scripts.particle import PartFactory, Particle
+from scripts.sounds import SoundEffect
+from scripts.spark import SparkFactory
 from scripts.utils import Dir, Vec2
 
 
@@ -15,6 +17,7 @@ class PhysicsEntity:
         self.asset = None
         self.size = size
         self.pos = pos.deepcopy()
+        self.hitpoint = Hitpoint(1)
         self.vel = Vec2((0, 0))
         self.vel_f = self.vel.deepcopy()
         self.collisions = Dir()
@@ -112,67 +115,69 @@ class Enemy(PhysicsEntity):
 
     def update(self, movement=Vec2((0, 0))):
         if self.walking:
-            # Not walking off edges.
-            if self.game.tilemap.solid_check(
-                Vec2((self.rect().centerx + (-7 if self.flip else 7),
-                      self.pos.y + 23))):
-                # Check wall collision.
-                if self.collisions.right or self.collisions.left:
-                    self.flip = not self.flip
-                else:
-                    if self.flip:
-                        movement = movement.add((-0.5, 0))
-                    else:
-                        movement = movement.add((0.5, 0))
-            else:
-                self.flip = not self.flip
-
-            # Reduce movement interval.
-            self.walking = max(0, self.walking - 1)
-            if not self.walking:
-                dis = (self.game.player.pos.x - self.pos.x,
-                       self.game.player.pos.y - self.pos.y)
-                if (abs(dis[1]) < 16):
-                    if (self.flip and dis[0] < 0):
-                        self.game.sfx['shoot'].play()
-                        self.game.projs.append(
-                            [Vec2((self.rect().centerx - 7, self.rect().centery)), -1.5, 0])
-                        for i in range(4):
-                            self.game.sparks.append(Spark(
-                                self.game.projs[-1][0], random.random() - 0.5 + math.pi, 2 + random.random()))
-                    if (not self.flip and dis[0] > 0):
-                        self.game.sfx['shoot'].play()
-                        self.game.projs.append(
-                            [Vec2((self.rect().centerx + 7, self.rect().centery)), 1.5, 0])
-                        for i in range(4):
-                            self.game.sparks.append(
-                                Spark(self.game.projs[-1][0], random.random() - 0.5, 2 + random.random()))
-
+            self._movement_algorithm(movement)
+            self._norm_walking()
         elif random.random() < 0.01:
             self.walking = random.randint(30, 120)
         super().update(movement)
+        self._update_anim()
+        self._check_player_collision()
 
-        if movement.x != 0:
+    def _movement_algorithm(self, movement):
+        pos = Vec2((self.rect().centerx + (-7 if self.flip else 7),
+                    self.pos.y + 23))
+        if not self.game.tilemap.solid_check(pos):
+            self.flip = not self.flip
+
+        if not self.collisions.right or self.collisions.left:
+            movement.x += (-0.5 if self.flip else 0.5)
+        else:
+            self.flip = not self.flip
+
+    def _norm_walking(self):
+        self.walking = max(0, self.walking - 1)
+        if not self.walking:
+            diff = Vec2((self.game.player.pos.x - self.pos.x,
+                        self.game.player.pos.y - self.pos.y))
+            if (abs(diff.y) < 16):
+                self._shoot(diff)
+
+    def _shoot(self, diff=Vec2((0, 0))):
+        if self.flip and diff.x < 0:
+            self.game.projs.append(
+                [Vec2((self.rect().centerx - 7, self.rect().centery)), -1.5, 0])
+            self._add_shoot_effects(math.pi)
+        elif not self.flip and diff.x > 0:
+            self.game.projs.append(
+                [Vec2((self.rect().centerx + 7, self.rect().centery)), 1.5, 0])
+            self._add_shoot_effects(0)
+
+    def _add_shoot_effects(self, angle):
+        self.game.sounds.get_sfx(SoundEffect.SHOOT).play()
+        for spark in SparkFactory.cone(self.game, angle):
+            self.game.sparks.append(spark)
+
+    def _update_anim(self):
+        if self.vel_f.x != 0:
             self._set_anim(AssetAnim.ENEMY_RUN)
         else:
             self._set_anim(AssetAnim.ENEMY_IDLE)
 
+    def _check_player_collision(self):
         if self.game.player.dashing >= 50:
             if self.rect().colliderect(self.game.player.rect()):
-                self.game.sfx['hit'].play()
-                self.game.shake = max(16, self.game.shake)
-                for i in range(30):
-                    angle = random.random() * math.pi * 2
-                    speed = random.random() * 5
-                    self.game.sparks.append(
-                        Spark(Vec2(self.rect().center), angle, 2 + random.random()))
-                    self.game.parts.append(Particle(self.game, AssetAnim.PARTICLE_DARK, Vec2(self.rect().center), vel=Vec2(
-                        (math.cos(angle + math.pi) * speed * 0.5, math.sin(angle + math.pi) * speed * 0.5))))
-                self.game.sparks.append(
-                    Spark(Vec2(self.rect().center), 0, 5 + random.random()))
-                self.game.sparks.append(
-                    Spark(Vec2(self.rect().center), math.pi, 5 + random.random()))
-                return True
+                self._add_hit_effects()
+                self.hitpoint.reduce(1)
+
+    def _add_hit_effects(self):
+        self.game.sounds.get_sfx(SoundEffect.HIT).play()
+        self.game.shake = max(16, self.game.shake)
+        for spark in SparkFactory.burst(Vec2(self.rect().center)):
+            self.game.sparks.append(spark)
+        for part in PartFactory.burst(self.game, AssetAnim.PARTICLE_DARK, Vec2(self.rect().center)):
+            self.game.parts.append(part)
+        self.game.sparks.append(SparkFactory.line(self.pos, 0))
+        self.game.sparks.append(SparkFactory.line(self.pos, math.pi))
 
     def render(self):
         super().render()
@@ -202,6 +207,11 @@ class Player(PhysicsEntity):
         self.dashing = 0
         self.dashing_dur = 12
         self.dashing_max = 60
+        self.dashing_diff = self.dashing_max - self.dashing_dur
+        self.dashing_thresholds = {
+            self.dashing_max,
+            self.dashing_diff
+        }
 
     def update(self, movement=Vec2((0, 0))):
         super().update(movement)
@@ -228,25 +238,18 @@ class Player(PhysicsEntity):
 
     def _handle_dash(self):
         if self.dashing > 0:
-            if self.dashing in {self.dashing_max,
-                                self.dashing_max - self.dashing_dur}:
-                for part in get_parts_burst(game=self.game,
-                                            amount=20,
-                                            asset=AssetAnim.PARTICLE_DARK,
-                                            pos=Vec2(self.rect().center),
-                                            rand_f=True):
+            self.dashing = max(0, self.dashing - 1)
+            if self.dashing in self.dashing_thresholds:
+                for part in PartFactory.burst2(self.game, AssetAnim.PARTICLE_DARK, Vec2(self.rect().center)):
                     self.game.parts.append(part)
 
-            self.dashing = max(0, self.dashing - 1)
-
-        if self.dashing > self.dashing_max - self.dashing_dur:
-            if self.flip:
-                self.vel.x = -8
-            else:
-                self.vel.x = 8
-            if self.dashing == (self.dashing_max - self.dashing_dur) + 1:
+        if self.dashing > self.dashing_diff:
+            self.vel.x = (-8 if self.flip else 8)
+            # Slow down the dash more rapidly at the end.
+            if self.dashing == self.dashing_diff + 1:
                 self.vel.x *= 0.4
 
+            # Acts as a trail of particles following the player.
             self.game.parts.append(
                 Particle(game=self.game,
                          asset=AssetAnim.PARTICLE_DARK,
@@ -278,7 +281,7 @@ class Player(PhysicsEntity):
             self._bump(Vec2((-2.5, -2.5)))
 
     def _bump(self, vec=Vec2((0, -2.5))):
-        self.game.sfx['jump'].play()
+        self.game.sounds.get_sfx(SoundEffect.JUMP).play()
         self.in_air = True
         self.jumps = max(0, self.jumps - 1)
         self.vel.x = vec.x
@@ -286,5 +289,5 @@ class Player(PhysicsEntity):
 
     def dash(self):
         if not self.dashing:
-            self.game.sfx['dash'].play()
+            self.game.sounds.get_sfx(SoundEffect.DASH).play()
             self.dashing = self.dashing_max

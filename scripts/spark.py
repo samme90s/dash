@@ -1,8 +1,20 @@
 import math
+import random
 
 import pygame
 
 from scripts.utils import Vec2
+
+
+def get_diamond_polygon_points(pos, angle, speed, offset=Vec2((0, 0))):
+    return ((pos.x + math.cos(angle) * speed * 3 - offset.x,
+             pos.y + math.sin(angle) * speed * 3 - offset.y),
+            (pos.x + math.cos(angle + math.pi * 0.5) * speed * 0.5 - offset.x,
+             pos.y + math.sin(angle + math.pi * 0.5) * speed * 0.5 - offset.y),
+            (pos.x + math.cos(angle + math.pi) * speed * 3 - offset.x,
+             pos.y + math.sin(angle + math.pi) * speed * 3 - offset.y),
+            (pos.x + math.cos(angle - math.pi) * speed * 0.5 - offset.x,
+             pos.y + math.sin(angle - math.pi) * speed * 0.5 - offset.y))
 
 
 class Spark:
@@ -20,15 +32,27 @@ class Spark:
         return not self.speed
 
     def render(self, surf, offset=Vec2((0, 0))):
-        render_points = [
-            (self.pos.x + math.cos(self.angle) * self.speed * 3 - offset.x,
-             self.pos.y + math.sin(self.angle) * self.speed * 3 - offset.y),
-            (self.pos.x + math.cos(self.angle + math.pi * 0.5) * self.speed * 0.5 - offset.x,
-             self.pos.y + math.sin(self.angle + math.pi * 0.5) * self.speed * 0.5 - offset.y),
-            (self.pos.x + math.cos(self.angle + math.pi) * self.speed * 3 - offset.x,
-             self.pos.y + math.sin(self.angle + math.pi) * self.speed * 3 - offset.y),
-            (self.pos.x + math.cos(self.angle - math.pi) * self.speed * 0.5 - offset.x,
-             self.pos.y + math.sin(self.angle - math.pi) * self.speed * 0.5 - offset.y)
-        ]
+        points = get_diamond_polygon_points(
+            self.pos, self.angle, self.speed, offset)
+        pygame.draw.polygon(surf, (255, 255, 255), points)
 
-        pygame.draw.polygon(surf, (255, 255, 255), render_points)
+
+class SparkFactory:
+    @staticmethod
+    def burst(pos=Vec2((0, 0))):
+        sparks = []
+        for _ in range(30):
+            angle = random.random() * math.pi * 2  # 360 degrees
+            sparks.append(Spark(pos, angle, 2 + random.random()))
+        return tuple(sparks)
+
+    @staticmethod
+    def line(pos=Vec2((0, 0)), angle=0):
+        return Spark(pos, angle, 5 + random.random())
+
+    @staticmethod
+    def cone(game, angle=0):
+        sparks = []
+        for _ in range(4):
+            sparks.append(Spark(game.projs[-1][0], random.random() - 0.5 + angle, 2 + random.random()))
+        return tuple(sparks)

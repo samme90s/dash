@@ -79,17 +79,17 @@ class Tilemap:
             if self.tilemap[tile_loc].type in PHYSICS_TILES:
                 return self.tilemap[tile_loc]
 
-    def extract(self, id_pairs, keep=False):
+    def extract(self, pairs, keep=False):
         matches = []
         for tile in self.offgrid.copy():
-            if (tile.type, tile.var) in id_pairs:
+            if (tile.type, tile.var) in pairs:
                 matches.append(tile.deepcopy())
                 if not keep:
                     self.offgrid.remove(tile)
 
         for loc in self.tilemap:
             tile = self.tilemap[loc]
-            if (tile.type, tile.var) in id_pairs:
+            if (tile.type, tile.var) in pairs:
                 matches.append(tile.deepcopy())
                 matches[-1].pos = matches[-1].pos.mult(self.size)
                 if not keep:

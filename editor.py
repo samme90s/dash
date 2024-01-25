@@ -11,9 +11,8 @@ from scripts.utils import Key, Mouse, Vec2
 class Editor(Instance):
     def __init__(self):
         super().__init__(title='editor',
-                         map_id='0',
                          res_base=(320, 180),
-                         res_scale=2.0)
+                         res_scale=3.0)
 
         self.binds = (
             Key((pygame.K_a, pygame.K_LEFT),
@@ -57,6 +56,10 @@ class Editor(Instance):
         self.click = False
         self.r_click = False
         self.ongrid = True
+        try:
+            self.tilemap.load('map.json')
+        except FileNotFoundError:
+            pass
 
     def _toggle_click(self):
         self.click = not self.click
@@ -96,10 +99,9 @@ class Editor(Instance):
             self._render()
 
     def _handle_scroll(self):
-        self.scroll = self.scroll.add(((self.dir.right -
-                                       self.dir.left) * 5,
-                                       (self.dir.down -
-                                       self.dir.up) * 5))
+        self.scroll = self.scroll.add(
+            ((self.dir.right - self.dir.left) * 5,
+             (self.dir.down - self.dir.up) * 5))
         self.render_scroll = self.scroll.int()
 
     def _handle_tilemap(self):

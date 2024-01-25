@@ -4,17 +4,6 @@ import random
 from scripts.utils import Vec2
 
 
-def get_parts_burst(game, amount, asset, pos, rand_f):
-    parts = []
-    for _ in range(amount):
-        angle = random.random() * math.pi * 2
-        speed = random.random() * 0.5 + 0.5
-        vel = Vec2((math.cos(angle) * speed, math.sin(angle) * speed))
-        parts.append(Particle(game, asset, pos, vel, rand_f))
-
-    return tuple(parts)
-
-
 class ParticleSpawner:
     def __init__(self, game, asset, vel, rand_f, rects, spawn_r=0.01):
         self.game = game
@@ -65,3 +54,27 @@ class Particle:
             .sub((self.game.render_scroll.x + img.get_width() // 2,
                   self.game.render_scroll.y + img.get_height() // 2))
             .tuple())
+
+
+class PartFactory:
+    @staticmethod
+    def burst(game, asset, pos):
+        parts = []
+        for _ in range(30):
+            angle = random.random() * math.pi * 2
+            speed = random.random() * 5
+            vel = Vec2((math.cos(angle + math.pi) * speed * 0.5,
+                        math.sin(angle + math.pi) * speed * 0.5))
+            parts.append(Particle(game, asset, pos, vel))
+        return tuple(parts)
+
+    @staticmethod
+    def burst2(game, asset, pos):
+        parts = []
+        for _ in range(20):
+            angle = random.random() * math.pi * 2
+            speed = random.random() * 0.5 + 0.5
+            vel = Vec2((math.cos(angle) * speed,
+                        math.sin(angle) * speed))
+            parts.append(Particle(game, asset, pos, vel))
+        return tuple(parts)
