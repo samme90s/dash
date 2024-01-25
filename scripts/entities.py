@@ -6,6 +6,7 @@ import pygame
 from scripts.assets import AssetAnim, AssetSprite
 from scripts.hitpoint import Hitpoint
 from scripts.particle import PartFactory, Particle
+from scripts.projectile import Proj
 from scripts.sounds import SoundEffect
 from scripts.spark import SparkFactory
 from scripts.utils import Dir, Vec2
@@ -144,18 +145,18 @@ class Enemy(PhysicsEntity):
 
     def _shoot(self, diff=Vec2((0, 0))):
         if self.flip and diff.x < 0:
-            self.game.projs.append(
-                [Vec2((self.rect().centerx - 7, self.rect().centery)), -1.5, 0])
-            self._add_shoot_effects(math.pi)
+            pos = Vec2((self.rect().centerx - 7, self.rect().centery))
+            vel = Vec2((-1.5, 0))
+            self.game.projs.append(Proj(pos, vel))
+            self._add_shoot_effects()
         elif not self.flip and diff.x > 0:
-            self.game.projs.append(
-                [Vec2((self.rect().centerx + 7, self.rect().centery)), 1.5, 0])
-            self._add_shoot_effects(0)
+            pos = Vec2((self.rect().centerx + 7, self.rect().centery))
+            vel = Vec2((1.5, 0))
+            self.game.projs.append(Proj(pos, vel))
+            self._add_shoot_effects()
 
-    def _add_shoot_effects(self, angle):
+    def _add_shoot_effects(self):
         self.game.sounds.get_sfx(SoundEffect.SHOOT).play()
-        for spark in SparkFactory.cone(self.game, angle):
-            self.game.sparks.append(spark)
 
     def _update_anim(self):
         if self.vel_f.x != 0:

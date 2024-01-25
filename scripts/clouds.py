@@ -17,17 +17,12 @@ class Cloud:
         # Multiplying depth with offset will give a parallax effect.
         render_pos = self.pos.sub(offset.mult(self.depth))
 
+        # Mod the image's dimensions (not removed before it is off-screen).
+        # Subtract the image's dimensions (add clouds off-screen)
         surf.blit(self.img,
                   render_pos
-                  # Clouds are never removed, thus we utilize a trick looping
-                  # them. When looping thing in computer graphics you generally
-                  # use modulo.
-                  # We add the image's dimensions to make sure the cloud is not
-                  # removed before it is off-screen.
                   .mod((surf.get_width() + self.img.get_width(),
                         surf.get_height() + self.img.get_height()))
-                  # We subtract the image's dimensions to make sure the clouds
-                  # are added off-screen.
                   .sub((self.img.get_width(), self.img.get_height()))
                   .tuple())
 

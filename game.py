@@ -1,6 +1,5 @@
 import math
 import os
-import random
 import sys
 
 import pygame
@@ -9,9 +8,9 @@ from instance import Instance
 from scripts.assets import AssetAnim, AssetLayer, AssetSprite, AssetTile
 from scripts.clouds import Clouds
 from scripts.entities import Enemy, Player
-from scripts.particle import Particle, ParticleSpawner
+from scripts.particle import PartFactory, ParticleSpawner
 from scripts.sounds import SoundAmbience, SoundEffect, SoundMusic, Sounds
-from scripts.spark import Spark
+from scripts.spark import SparkFactory
 from scripts.utils import Key, Vec2, get_rects
 
 
@@ -153,46 +152,34 @@ class Game(Instance):
                                      self.dir.down - self.dir.up)))
             self.player.render()
 
-    # [[x, y], direction, timer]
     def _handle_projs(self):
         for proj in self.projs.copy():
-            proj[0].x += proj[1]
-            proj[2] += 1
+            proj.pos = proj.pos.add(proj.vel)
+            proj.timer += 1
             img = self.assets.get_sprite(AssetSprite.PROJECTILE)
-            self.fore_d.blit(
-                img,
-                (proj[0].x - img.get_width() / 2 - self.render_scroll.x,
-                 proj[0].y - img.get_height() / 2 - self.render_scroll.y))
-            if self.tilemap.solid_check(proj[0]) or proj[2] > 360:
+            pos = proj.pos.sub((img.get_width() / 2, img.get_height() / 2)).sub(self.render_scroll).tuple()
+            self.fore_d.blit(img, pos)
+
+            if self.tilemap.solid_check(proj.pos) or proj.timer > 360:
                 self.projs.remove(proj)
-                for i in range(4):
-                    self.sparks.append(Spark(proj[0], random.random(
-                    ) - 0.5 + (math.pi if proj[1] > 0 else 0), 2 + random.random()))
-            elif self.player.dashing_dur < 50:
-                if self.player.rect().collidepoint(proj[0].tuple()):
+                for spark in SparkFactory.cone(proj.pos, (math.pi if proj.vel.x > 0 else 0)):
+                    self.sparks.append(spark)
+            elif self.player.dashing < self.player.dashing_diff:
+                if self.player.rect().collidepoint(proj.pos.tuple()):
                     self.projs.remove(proj)
                     self.sounds.get_sfx(SoundEffect.HIT).play()
                     self.shake = max(48, self.shake)
                     self.player.hitpoint.reduce(1)
-                    for _ in range(30):
-                        angle = random.random() * math.pi * 2
-                        speed = random.random() * 5
-                        self.sparks.append(Spark(Vec2(self.player.rect().center),
-                                                 angle,
-                                                 2 + random.random()))
-                        self.parts.append(Particle(self,
-                                                   AssetAnim.PARTICLE_DARK,
-                                                   Vec2(
-                                                       self.player.rect().center),
-                                                   vel=Vec2((math.cos(angle + math.pi) * speed * 0.5,
-                                                             math.sin(angle + math.pi) * speed * 0.5))))
+                    for spark in SparkFactory.burst(Vec2(self.player.rect().center)):
+                        self.sparks.append(spark)
+                    for part in PartFactory.burst(self, AssetAnim.PARTICLE_DARK, Vec2(self.player.rect().center)):
+                        self.parts.append(part)
 
     def _handle_sparks(self):
         for spark in self.sparks.copy():
-            kill = spark.update()
-
-            spark.render(self.fore_d, offset=self.render_scroll)
-            if kill:
+            if not spark.update():
+                spark.render(self.fore_d, offset=self.render_scroll)
+            else:
                 self.sparks.remove(spark)
 
     def _handle_parts(self):

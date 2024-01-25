@@ -18,7 +18,7 @@ def get_diamond_polygon_points(pos, angle, speed, offset=Vec2((0, 0))):
 
 
 class Spark:
-    def __init__(self, pos, angle, speed):
+    def __init__(self, pos=Vec2((0, 0)), angle=0, speed=0):
         self.pos = pos.deepcopy()
         # Represents polar coordinates:
         self.angle = angle
@@ -51,8 +51,8 @@ class SparkFactory:
         return Spark(pos, angle, 5 + random.random())
 
     @staticmethod
-    def cone(game, angle=0):
+    def cone(pos=Vec2((0, 0)), angle=0):
         sparks = []
         for _ in range(4):
-            sparks.append(Spark(game.projs[-1][0], random.random() - 0.5 + angle, 2 + random.random()))
+            sparks.append(Spark(pos, random.random() - 0.5 + angle, 2 + random.random()))
         return tuple(sparks)
