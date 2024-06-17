@@ -19,10 +19,8 @@ class Cloud:
 
         # Mod the image's dimensions (not removed before it is off-screen).
         # Subtract the image's dimensions (add clouds off-screen)
-        surf.blit(self.img,
-                  render_pos
-                  .mod((surf.get_width() + self.img.get_width(),
-                        surf.get_height() + self.img.get_height()))
+        surf.blit(self.img, render_pos
+                  .mod((surf.get_width() + self.img.get_width(), surf.get_height() + self.img.get_height()))
                   .sub((self.img.get_width(), self.img.get_height()))
                   .tuple())
 
@@ -33,10 +31,10 @@ class Clouds:
 
         for _ in range(count):
             self.clouds.append(Cloud(
-                random.choice(cloud_images),
-                Vec2((random.random() * 1024, random.random() * 1024)),
-                random.random() * 0.05 + 0.05,
-                random.random() * 0.6 + 0.2))
+                img=random.choice(cloud_images),
+                pos=Vec2((random.random() * 1024, random.random() * 1024)),
+                speed=random.random() * 0.05 + 0.05,
+                depth=random.random() * 0.6 + 0.2))
 
         # This ensures that clouds are rendered in correct order.
         self.clouds.sort(key=lambda cloud: cloud.depth)

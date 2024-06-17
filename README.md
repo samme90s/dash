@@ -1,10 +1,10 @@
 # Python
 
-All commands assume you are running them from the root directory of the project.
+**IMPORTANT** -- All commands are executed from the root directory of the project.
 
-The program can be run by typing the following command:
+## Run
 
 ```bash
-pip install pygame-ce
-py game.py
+pip install -r requirements.txt &&
+python game.py
 ```

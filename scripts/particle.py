@@ -16,14 +16,8 @@ class ParticleSpawner:
     def update(self):
         for rect in self.rects:
             if (random.random() * 1) < self.spawn_r:
-                pos = Vec2((rect.x + random.random() * rect.width,
-                            rect.y + random.random() * rect.height))
-                self.game.parts.append(
-                    Particle(self.game,
-                             self.asset,
-                             pos,
-                             self.vel,
-                             self.rand_f))
+                pos = Vec2((rect.x + random.random() * rect.width, rect.y + random.random() * rect.height))
+                self.game.parts.append(Particle(self.game, self.asset, pos, self.vel, self.rand_f))
 
 
 class Particle:
@@ -33,15 +27,13 @@ class Particle:
         self.pos = pos.deepcopy()
         self.vel = Vec2(vel)
         self.anim = self.game.assets.get_anim(asset).deepcopy()
+
         if rand_f:
             # Reduce by one to avoid the last frame being selected.
-            self.anim.frame = random.randint(
-                0, len(self.anim.images) * (self.anim.img_dur - 1))
+            self.anim.frame = random.randint(0, len(self.anim.images) * (self.anim.img_dur - 1))
 
     def sin_offset(self, speed=Vec2((0, 0)), amp=Vec2((0, 0))):
-        self.pos = self.pos.add(
-            (math.sin(self.anim.frame * speed.x) * amp.x,
-             math.sin(self.anim.frame * speed.y) * amp.y))
+        self.pos = self.pos.add((math.sin(self.anim.frame * speed.x) * amp.x, math.sin(self.anim.frame * speed.y) * amp.y))
 
     def update(self):
         self.pos = self.pos.add(self.vel)
@@ -49,12 +41,8 @@ class Particle:
 
     def render(self):
         img = self.anim.img()
-        self.game.fore_d.blit(
-            img,
-            self.pos
-            .sub((self.game.render_scroll.x + img.get_width() // 2,
-                  self.game.render_scroll.y + img.get_height() // 2))
-            .tuple())
+        pos = self.pos.sub((self.game.render_scroll.x + img.get_width() // 2, self.game.render_scroll.y + img.get_height() // 2)).tuple()
+        self.game.fore_d.blit(img, pos)
 
 
 class PartFactory:
@@ -64,8 +52,7 @@ class PartFactory:
         for _ in range(30):
             angle = random.random() * math.pi * 2
             speed = random.random() * 5
-            vel = Vec2((math.cos(angle + math.pi) * speed * 0.5,
-                        math.sin(angle + math.pi) * speed * 0.5))
+            vel = Vec2((math.cos(angle + math.pi) * speed * 0.5, math.sin(angle + math.pi) * speed * 0.5))
             parts.append(Particle(game, asset, pos, vel))
         return tuple(parts)
 
@@ -75,7 +62,6 @@ class PartFactory:
         for _ in range(20):
             angle = random.random() * math.pi * 2
             speed = random.random() * 0.5 + 0.5
-            vel = Vec2((math.cos(angle) * speed,
-                        math.sin(angle) * speed))
+            vel = Vec2((math.cos(angle) * speed, math.sin(angle) * speed))
             parts.append(Particle(game, asset, pos, vel))
         return tuple(parts)

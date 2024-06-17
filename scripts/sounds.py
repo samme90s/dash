@@ -21,19 +21,14 @@ class SoundMusic(Enum):
 class Sounds:
     def __init__(self):
         self.ambient = {
-            SoundAmbience.AMBIENCE.value: pygame.mixer.Sound(
-                SoundAmbience.AMBIENCE.value),
+            SoundAmbience.AMBIENCE.value: pygame.mixer.Sound(SoundAmbience.AMBIENCE.value),
         }
 
         self.sfx = {
-            SoundEffect.DASH.value: pygame.mixer.Sound(
-                SoundEffect.DASH.value),
-            SoundEffect.HIT.value: pygame.mixer.Sound(
-                SoundEffect.HIT.value),
-            SoundEffect.JUMP.value: pygame.mixer.Sound(
-                SoundEffect.JUMP.value),
-            SoundEffect.SHOOT.value: pygame.mixer.Sound(
-                SoundEffect.SHOOT.value),
+            SoundEffect.DASH.value: pygame.mixer.Sound(SoundEffect.DASH.value),
+            SoundEffect.HIT.value: pygame.mixer.Sound(SoundEffect.HIT.value),
+            SoundEffect.JUMP.value: pygame.mixer.Sound(SoundEffect.JUMP.value),
+            SoundEffect.SHOOT.value: pygame.mixer.Sound(SoundEffect.SHOOT.value),
         }
 
         self.ambient[SoundAmbience.AMBIENCE.value].set_volume(0.2)

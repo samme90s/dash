@@ -20,6 +20,7 @@ def get_diamond_polygon_points(pos, angle, speed, offset=Vec2((0, 0))):
 class Spark:
     def __init__(self, pos=Vec2((0, 0)), angle=0, speed=0):
         self.pos = pos.deepcopy()
+
         # Represents polar coordinates:
         self.angle = angle
         self.speed = speed
@@ -29,11 +30,11 @@ class Spark:
         self.pos.y += math.sin(self.angle) * self.speed
 
         self.speed = max(0, self.speed - 0.1)
+
         return not self.speed
 
     def render(self, surf, offset=Vec2((0, 0))):
-        points = get_diamond_polygon_points(
-            self.pos, self.angle, self.speed, offset)
+        points = get_diamond_polygon_points(self.pos, self.angle, self.speed, offset)
         pygame.draw.polygon(surf, (255, 255, 255), points)
 
 
@@ -44,6 +45,7 @@ class SparkFactory:
         for _ in range(30):
             angle = random.random() * math.pi * 2  # 360 degrees
             sparks.append(Spark(pos, angle, 2 + random.random()))
+
         return tuple(sparks)
 
     @staticmethod
@@ -54,8 +56,6 @@ class SparkFactory:
     def cone(pos=Vec2((0, 0)), angle=0):
         sparks = []
         for _ in range(4):
-            sparks.append(
-                Spark(pos,
-                      random.random() - 0.5 + angle,
-                      2 + random.random()))
+            sparks.append(Spark(pos, random.random() - 0.5 + angle, 2 + random.random()))
+
         return tuple(sparks)

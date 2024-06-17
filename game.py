@@ -16,21 +16,14 @@ from scripts.utils import Key, Vec2, get_rects
 
 class Game(Instance):
     def __init__(self):
-        super().__init__(title='python',
-                         res_base=(320, 180),
-                         res_scale=3.0)
+        super().__init__(title='python', res_base=(320, 180), res_scale=3.0)
 
         self.binds = (
-            Key((pygame.K_a, pygame.K_LEFT),
-                lambda: self.dir.toggle_left(),
-                lambda: self.dir.toggle_left()),
-            Key((pygame.K_d, pygame.K_RIGHT),
-                lambda: self.dir.toggle_right(),
-                lambda: self.dir.toggle_right()),
-            Key((pygame.K_SPACE, pygame.K_UP),
-                lambda: self.player.jump()),
-            Key(pygame.K_LSHIFT,
-                lambda: self.player.dash()))
+            Key((pygame.K_a, pygame.K_LEFT), lambda: self.dir.toggle_left(), lambda: self.dir.toggle_left()),
+            Key((pygame.K_d, pygame.K_RIGHT), lambda: self.dir.toggle_right(), lambda: self.dir.toggle_right()),
+            Key((pygame.K_SPACE, pygame.K_UP), lambda: self.player.jump()),
+            Key(pygame.K_LSHIFT, lambda: self.player.dash())
+        )
 
         self.sounds = Sounds()
         self.clouds = Clouds(self.assets.get_layers(AssetLayer.CLOUD), count=16)
@@ -59,20 +52,8 @@ class Game(Instance):
 
     def load_level(self, map_id):
         super().load_level(map_id)
-        tree_rects = get_rects(
-            game=self,
-            type=AssetTile.LARGE_DECOR,
-            var=2,
-            keep=True,
-            size=Vec2((23, 13)),
-            offset=Vec2((4, 4)))
-        self.leaf_spawner = ParticleSpawner(
-            game=self,
-            asset=AssetAnim.PARTICLE_LEAF,
-            vel=Vec2((-0.1, 0.3)),
-            rand_f=True,
-            rects=tree_rects,
-            spawn_r=0.016)
+        tree_rects = get_rects(self, AssetTile.LARGE_DECOR, 2, True, Vec2((23, 13)), Vec2((4, 4)))
+        self.leaf_spawner = ParticleSpawner(self, AssetAnim.PARTICLE_LEAF, Vec2((-0.1, 0.3)), True, tree_rects, 0.016)
 
         self.player = Player(self, (8, 15), Vec2((0, 0)))
         self.enemies = []
@@ -83,10 +64,7 @@ class Game(Instance):
         self.handle_spawners()
 
     def handle_spawners(self):
-        for spawn in self.tilemap.extract([
-                (AssetTile.SPAWNERS, 0),
-                (AssetTile.SPAWNERS, 1)
-        ]):
+        for spawn in self.tilemap.extract([(AssetTile.SPAWNERS, 0), (AssetTile.SPAWNERS, 1)]):
             if spawn.var == 0:
                 self.player.pos = spawn.pos
             else:
@@ -94,32 +72,30 @@ class Game(Instance):
 
     def clear(self):
         super().clear()
-        self.back_d.blit(
-            self.assets.get_layers(AssetLayer.BACKGROUND, 0), (0, 0))
+        self.back_d.blit(self.assets.get_layers(AssetLayer.BACKGROUND, 0), (0, 0))
 
     def handle_game_state(self):
         if self.player.hitpoint.is_dead():
             self.transition = min(30, self.transition + 1)
+
             if self.transition >= 30:
                 self.load_level(self.level)
 
         if not len(self.enemies):
             self.transition += 1
+
             if self.transition > 30:
-                self.level = min(
-                    len(os.listdir('data/maps/')) - 1, self.level + 1)
+                self.level = min(len(os.listdir('data/maps/')) - 1, self.level + 1)
                 self.load_level(self.level)
+
         if self.transition < 0:
             self.transition += 1
 
     def handle_scroll(self):
         self.scroll = self.scroll.add(
-            ((self.player.rect().centerx
-              - self.fore_d.get_width() / 2
-              - self.scroll.x) / 30,
-             (self.player.rect().centery
-              - self.fore_d.get_height() / 2
-              - self.scroll.y) / 30))
+            ((self.player.rect().centerx - self.fore_d.get_width() / 2 - self.scroll.x) / 30,
+             (self.player.rect().centery - self.fore_d.get_height() / 2 - self.scroll.y) / 30)
+        )
         self.render_scroll = self.scroll.int()
 
     def handle_clouds(self):
@@ -139,8 +115,7 @@ class Game(Instance):
 
     def handle_player(self):
         if not self.player.hitpoint.is_dead():
-            self.player.update(Vec2((self.dir.right - self.dir.left,
-                                     self.dir.down - self.dir.up)))
+            self.player.update(Vec2((self.dir.right - self.dir.left, self.dir.down - self.dir.up)))
             self.player.render()
 
     def handle_projs(self):
@@ -148,23 +123,18 @@ class Game(Instance):
             proj.pos = proj.pos.add(proj.vel)
             proj.timer += 1
             img = self.assets.get_sprite(AssetSprite.PROJECTILE)
-            pos = (proj.pos
-                   .sub((img.get_width() / 2, img.get_height() / 2))
-                   .sub(self.render_scroll)
-                   .tuple())
+            pos = (proj.pos.sub((img.get_width() / 2, img.get_height() / 2)).sub(self.render_scroll).tuple())
             self.fore_d.blit(img, pos)
 
             if self.tilemap.solid_check(proj.pos) or proj.timer > 360:
                 self.handle_proj_solid(proj)
-            elif (self.player.dashing < self.player.dashing_diff and
-                  self.player.rect().collidepoint(proj.pos.tuple())):
+            elif (self.player.dashing < self.player.dashing_diff and self.player.rect().collidepoint(proj.pos.tuple())):
                 self.handle_proj_hit(proj)
 
     def handle_proj_solid(self, proj):
         self.projs.remove(proj)
-        for spark in SparkFactory.cone(
-                proj.pos,
-                (math.pi if proj.vel.x > 0 else 0)):
+
+        for spark in SparkFactory.cone(proj.pos, (math.pi if proj.vel.x > 0 else 0)):
             self.sparks.append(spark)
 
     def handle_proj_hit(self, proj):
@@ -172,13 +142,11 @@ class Game(Instance):
         self.sounds.get_sfx(SoundEffect.HIT).play()
         self.shake = max(48, self.shake)
         self.player.hitpoint.reduce(1)
-        for spark in SparkFactory.burst(
-                Vec2(self.player.rect().center)):
+
+        for spark in SparkFactory.burst(Vec2(self.player.rect().center)):
             self.sparks.append(spark)
-        for part in PartFactory.burst(
-                self,
-                AssetAnim.PARTICLE_DARK,
-                Vec2(self.player.rect().center)):
+
+        for part in PartFactory.burst(self, AssetAnim.PARTICLE_DARK, Vec2(self.player.rect().center)):
             self.parts.append(part)
 
     def handle_sparks(self):
@@ -205,17 +173,17 @@ class Game(Instance):
         if self.transition:
             transition_surf = pygame.Surface(self.fore_d.get_size())
             pygame.draw.circle(
-                transition_surf,
-                (255, 255, 255),
-                (self.fore_d.get_width() // 2,
-                 self.fore_d.get_height() // 2),
-                (30 - abs(self.transition)) * 8)
+                surface=transition_surf,
+                color=(255, 255, 255),
+                center=(self.fore_d.get_width() // 2, self.fore_d.get_height() // 2),
+                radius=(30 - abs(self.transition)) * 8)
             transition_surf.set_colorkey((255, 255, 255))
             self.fore_d.blit(transition_surf, (0, 0))
 
     def handle_events(self):
         for event in pygame.event.get():
             self.handle_window(event)
+
             for bind in self.binds:
                 bind.check(event)
 

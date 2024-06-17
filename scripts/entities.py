@@ -68,6 +68,7 @@ class PhysicsEntity:
                 if self.vel_f.x < 0:
                     entity_rect.left = rect.right
                     self.collisions.left = True
+
                 self.pos.x = entity_rect.x
 
     def update_pos_y(self):
@@ -81,6 +82,7 @@ class PhysicsEntity:
                 if self.vel_f.y < 0:
                     entity_rect.top = rect.bottom
                     self.collisions.up = True
+
                 self.pos.y = entity_rect.y
 
     def apply_gravity(self):
@@ -101,12 +103,8 @@ class PhysicsEntity:
         return pygame.Rect(*self.pos, *self.size)
 
     def render(self):
-        self.game.fore_d.blit(
-            pygame.transform.flip(self.anim.img(), self.flip, False),
-            self.pos
-            .sub(self.game.render_scroll)
-            .add(self.anim_offset)
-            .tuple())
+        self.game.fore_d.blit(pygame.transform.flip(self.anim.img(), self.flip, False),
+                              self.pos.sub(self.game.render_scroll).add(self.anim_offset).tuple())
 
 
 class Enemy(PhysicsEntity):
@@ -120,13 +118,14 @@ class Enemy(PhysicsEntity):
             self.norm_walking()
         elif random.random() < 0.01:
             self.walking = random.randint(30, 120)
+
         super().update(movement)
         self.update_anim()
         self.check_player_collision()
 
     def movement_algorithm(self, movement):
-        pos = Vec2((self.rect().centerx + (-7 if self.flip else 7),
-                    self.pos.y + 23))
+        pos = Vec2((self.rect().centerx + (-7 if self.flip else 7), self.pos.y + 23))
+
         if not self.game.tilemap.solid_check(pos):
             self.flip = not self.flip
 
@@ -137,9 +136,10 @@ class Enemy(PhysicsEntity):
 
     def norm_walking(self):
         self.walking = max(0, self.walking - 1)
+
         if not self.walking:
-            diff = Vec2((self.game.player.pos.x - self.pos.x,
-                        self.game.player.pos.y - self.pos.y))
+            diff = Vec2((self.game.player.pos.x - self.pos.x, self.game.player.pos.y - self.pos.y))
+
             if (abs(diff.y) < 16):
                 self.shoot(diff)
 
@@ -173,31 +173,25 @@ class Enemy(PhysicsEntity):
     def add_hit_effects(self):
         self.game.sounds.get_sfx(SoundEffect.HIT).play()
         self.game.shake = max(16, self.game.shake)
+
         for spark in SparkFactory.burst(Vec2(self.rect().center)):
             self.game.sparks.append(spark)
-        for part in PartFactory.burst(
-                self.game,
-                AssetAnim.PARTICLE_DARK,
-                Vec2(self.rect().center)):
+
+        for part in PartFactory.burst(self.game, AssetAnim.PARTICLE_DARK, Vec2(self.rect().center)):
             self.game.parts.append(part)
+
         self.game.sparks.append(SparkFactory.line(self.pos, 0))
         self.game.sparks.append(SparkFactory.line(self.pos, math.pi))
 
     def render(self):
         super().render()
-
         gun_img = self.game.assets.get_sprite(AssetSprite.GUN)
+
         if self.flip:
-            pos = (Vec2((self.rect().centerx - 4 - gun_img.get_width(),
-                         self.rect().centery))
-                   .sub(self.game.render_scroll))
-            self.game.fore_d.blit(
-                pygame.transform.flip(gun_img, True, False),
-                pos.tuple())
+            pos = (Vec2((self.rect().centerx - 4 - gun_img.get_width(), self.rect().centery)).sub(self.game.render_scroll))
+            self.game.fore_d.blit(pygame.transform.flip(gun_img, True, False), pos.tuple())
         else:
-            pos = (Vec2((self.rect().centerx + 4,
-                         self.rect().centery))
-                   .sub(self.game.render_scroll))
+            pos = (Vec2((self.rect().centerx + 4, self.rect().centery)).sub(self.game.render_scroll))
             self.game.fore_d.blit(gun_img, pos.tuple())
 
 
@@ -245,11 +239,9 @@ class Player(PhysicsEntity):
     def handle_dash(self):
         if self.dashing > 0:
             self.dashing = max(0, self.dashing - 1)
+
             if self.dashing in self.dashing_thresholds:
-                for part in PartFactory.burst2(
-                        self.game,
-                        AssetAnim.PARTICLE_DARK,
-                        Vec2(self.rect().center)):
+                for part in PartFactory.burst2(self.game, AssetAnim.PARTICLE_DARK, Vec2(self.rect().center)):
                     self.game.parts.append(part)
 
         if self.dashing > self.dashing_diff:
@@ -259,13 +251,7 @@ class Player(PhysicsEntity):
                 self.vel.x *= 0.4
 
             # Acts as a trail of particles following the player.
-            self.game.parts.append(
-                Particle(
-                    game=self.game,
-                    asset=AssetAnim.PARTICLE_DARK,
-                    pos=Vec2(self.rect().center),
-                    vel=self.vel.div(4),
-                    rand_f=True))
+            self.game.parts.append(Particle(self.game, AssetAnim.PARTICLE_DARK, Vec2(self.rect().center), self.vel.div(4), rand_f=True))
 
     def update_anim(self):
         if not self.y_slide:
