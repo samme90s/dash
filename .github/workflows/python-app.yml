@@ -20,11 +20,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      PYTHON_VERSION: 3.12.3
+      PYTHON_VERSION: 3.12.4
 
     steps:
       - name: "☁️ Checkout code"
-        uses: actions/checkout@v4.1.6
+        uses: actions/checkout@v4.1.7
 
       - name: "🐍 Set up Python ${{ env.PYTHON_VERSION }}"
         uses: actions/setup-python@v5.1.0
