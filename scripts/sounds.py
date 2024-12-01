@@ -20,6 +20,8 @@ class SoundMusic(Enum):
 
 class Sounds:
     def __init__(self):
+        pygame.mixer.init()
+
         self.ambient = {
             SoundAmbience.AMBIENCE.value: pygame.mixer.Sound(SoundAmbience.AMBIENCE.value),
         }

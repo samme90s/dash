@@ -8,17 +8,35 @@
 
 **IMPORTANT** -- All commands are executed from the root directory of the project.
 
-## Usage
+## Optional
 
-Run game:
+### Ubuntu
 
-```bash
-pip install -r requirements.txt &&
-python game.py
+````shell
+# You may need to install this audio library
+# if running the application causes it to throw on
+# audio driver not found.
+sudo apt update && \
+sudo apt install libpulse0
 ```
 
-Use the editor (saves and loads from `map.json` in same directory as `editor.py`):
+## Setup
+
+```shell
+# Install dependencies locally
+# and activate the virtual environment.
+source setup.sh
+````
+
+## Usage
 
 ```bash
+# Run the game using the command:
+python3 game.py
+```
+
+```bash
+# Use the editor (saves and loads "map.json"
+# in the same directory as "editor.py"):
 python editor.py
 ```
