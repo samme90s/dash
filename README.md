@@ -12,7 +12,7 @@
 
 ### Ubuntu
 
-````shell
+```shell
 # You may need to install this audio library
 # if running the application causes it to throw on
 # audio driver not found.
@@ -26,7 +26,7 @@ sudo apt install libpulse0
 # Install dependencies locally
 # and activate the virtual environment.
 source setup.sh
-````
+```
 
 ## Usage
 
