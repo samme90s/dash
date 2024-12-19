@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "dash"
+version = "0.1.0"
+description = "two dimensional game engine and editor"
+authors = ["Samuel Svensson"]
+license = "GPL-3.0"
+readme = "README.md"
+
+packages = [
+    { include = "scripts" },
+    { include = "data" }
+]
+
+[tool.poetry.scripts]
+game = "game:Game"
+edit = "editor:Editor"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pygame-ce = "^2.5.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
