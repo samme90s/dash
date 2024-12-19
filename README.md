@@ -23,7 +23,9 @@ poetry shell
 
 ```shell
 # Or activate without shell active:
-poetry run python game.py
+poetry run game
+# This only works when the scripts exists in the pyproject.toml file.
+# Else run: poetry run python game.py
 ```
 
 If Poetry is not used, see the:
